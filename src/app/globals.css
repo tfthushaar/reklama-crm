@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+
+  --color-brand-50: #eef4fa;
+  --color-brand-100: #d7e5f2;
+  --color-brand-200: #afcae4;
+  --color-brand-300: #7ea8d0;
+  --color-brand-400: #4f85bb;
+  --color-brand-500: #2f6aa3;
+  --color-brand-600: #245a8d;
+  --color-brand-700: #1d4a73;
+  --color-brand-800: #173b5c;
+  --color-brand-900: #0f2640;
+  --color-brand-950: #0a1a2d;
+
+  --color-accent-500: #f28c28;
+  --color-accent-600: #d9731a;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: #f5f7fa;
+  color: #0f172a;
+  font-feature-settings: "cv11", "ss01";
+}
+
+::selection {
+  background: var(--color-brand-100);
+}
+
+dialog::backdrop {
+  background: rgb(15 23 42 / 0.45);
+  backdrop-filter: blur(2px);
+}
+
+dialog[open] {
+  animation: pop 0.14s ease-out;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+}

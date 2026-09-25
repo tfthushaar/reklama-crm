@@ -1,0 +1,23 @@
+node_modules/
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# local database + uploaded files
+.data/
+
+# env
+.env
+.env.*
+!.env.example
+
+# client documents — keep out of the public repo
+*.pdf
+
+# misc
+.DS_Store
+npm-debug.log*
+.playwright/
+test-results/
