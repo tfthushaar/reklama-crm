@@ -13,7 +13,7 @@ import { ActionButton, ActionForm, Modal } from "@/components/forms";
 import { AvailabilityStrip, Legend } from "@/components/availability-strip";
 import { ScreenFields } from "@/components/screen-form";
 import { priceSummary, saleSummary, sizeSummary } from "@/components/screens-nav";
-import { Badge, Card, CardHeader, EmptyState, Field, Input, KeyValue, LinkButton, Notice, Select, Textarea, cn } from "@/components/ui";
+import { BackLink, Badge, Card, CardHeader, EmptyState, Field, Input, KeyValue, LinkButton, Notice, Select, Textarea, cn } from "@/components/ui";
 import { createTicketAction, deleteAssetPhotoAction, updateAssetAction, uploadAssetPhotoAction } from "@/app/actions/screens";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -76,20 +76,18 @@ export default async function ScreenPage({ params }: { params: Promise<{ id: str
   return (
     <div className="space-y-5">
       <div>
-        <Link href="/screens" className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800">
-          ← Screens
-        </Link>
+        <BackLink href="/screens" label="Screens" />
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{a.name}</h1>
+              <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">{a.name}</h1>
               <Badge tone={a.type === "led" ? "purple" : "teal"}>{ASSET_TYPE_LABEL[a.type]}</Badge>
               <Badge tone={ASSET_STATUS[a.status].tone} dot>
                 {ASSET_STATUS[a.status].label}
               </Badge>
             </div>
-            <p className="mt-1 text-sm text-slate-500">
-              {a.code} · {[a.address, a.area, a.city].filter(Boolean).join(", ")}
+            <p className="mt-1 text-sm text-neutral-500">
+              {a.code}, {[a.address, a.area, a.city].filter(Boolean).join(", ")}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -109,7 +107,7 @@ export default async function ScreenPage({ params }: { params: Promise<{ id: str
                 <Field label="Details">
                   <Textarea name="notes" rows={2} />
                 </Field>
-                <label className="flex items-center gap-2 text-sm text-slate-700">
+                <label className="flex items-center gap-2 text-sm text-neutral-700">
                   <input type="checkbox" name="takeOffline" className="size-4" /> Mark screen as under maintenance
                 </label>
               </ActionForm>
@@ -176,7 +174,7 @@ export default async function ScreenPage({ params }: { params: Promise<{ id: str
             ) : (
               <div className="grid grid-cols-2 gap-3 p-4">
                 {photos.map((p) => (
-                  <div key={p.id} className="group relative overflow-hidden rounded-lg border border-slate-200">
+                  <div key={p.id} className="group relative overflow-hidden rounded-lg border border-neutral-200">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.url} alt={`${a.name} ${p.kind}`} className="aspect-[16/10] w-full object-cover" />
                     <span className="absolute top-2 left-2 rounded bg-white/90 px-2 py-0.5 text-xs font-medium capitalize">{p.kind}</span>
@@ -200,17 +198,17 @@ export default async function ScreenPage({ params }: { params: Promise<{ id: str
               <Legend slots={a.type === "led"} />
             </div>
             {av.holds.length > 0 && (
-              <div className="border-t border-slate-100 px-5 py-3">
-                <p className="mb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">On hold (quote sent, not confirmed)</p>
+              <div className="border-t border-neutral-100 px-5 py-3">
+                <p className="mb-2 text-[13px] font-medium text-neutral-500">On hold (quote sent, not confirmed)</p>
                 <ul className="space-y-1.5 text-sm">
                   {av.holds.map((h, i) => (
                     <li key={i} className="flex flex-wrap items-center justify-between gap-2">
                       <span>
-                        <Link href={`/quotes/${h.refId}`} className="font-medium text-slate-900 hover:underline">
+                        <Link href={`/quotes/${h.refId}`} className="font-medium text-neutral-900 hover:underline">
                           {h.clientName}
                         </Link>{" "}
-                        <span className="text-slate-500">
-                          · {fmtRange(h.startDate, h.endDate)} · {h.exclusive ? "whole screen" : `${h.slots} slot${h.slots > 1 ? "s" : ""}`}
+                        <span className="text-neutral-500">
+                         , {fmtRange(h.startDate, h.endDate)}, {h.exclusive ? "whole screen" : `${h.slots} slot${h.slots > 1 ? "s" : ""}`}
                         </span>
                       </span>
                       <Badge tone="amber">Released {relTime(h.expiresAt!)}</Badge>
@@ -226,14 +224,14 @@ export default async function ScreenPage({ params }: { params: Promise<{ id: str
             {lines.length === 0 ? (
               <EmptyState title="No bookings yet" />
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-neutral-100">
                 {[...upcoming, ...past.slice(0, 5)].map(({ l, b, client }) => (
                   <li key={l.id}>
-                    <Link href={`/bookings/${b.id}`} className={cn("flex flex-wrap items-center justify-between gap-3 px-5 py-3 hover:bg-slate-50", l.endDate! < t && "opacity-70")}>
+                    <Link href={`/bookings/${b.id}`} className={cn("flex flex-wrap items-center justify-between gap-3 px-5 py-3 hover:bg-neutral-50", l.endDate! < t && "opacity-70")}>
                       <div>
-                        <p className="font-medium text-slate-900">{client}</p>
-                        <p className="text-xs text-slate-500">
-                          {b.number} · {fmtRange(l.startDate, l.endDate)} · {l.mode === "slots" ? `${l.slots} slot${(l.slots ?? 1) > 1 ? "s" : ""}` : "whole screen"}
+                        <p className="font-medium text-neutral-900">{client}</p>
+                        <p className="text-xs text-neutral-500">
+                          {b.number}, {fmtRange(l.startDate, l.endDate)}, {l.mode === "slots" ? `${l.slots} slot${(l.slots ?? 1) > 1 ? "s" : ""}` : "whole screen"}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
@@ -250,17 +248,17 @@ export default async function ScreenPage({ params }: { params: Promise<{ id: str
           <Card>
             <CardHeader title="Maintenance history" />
             {tickets.length === 0 ? (
-              <p className="px-5 py-4 text-sm text-slate-500">No issues reported.</p>
+              <p className="px-5 py-4 text-sm text-neutral-500">No issues reported.</p>
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-neutral-100">
                 {tickets.map(({ t: tk, who }) => (
                   <li key={tk.id} className="flex items-center justify-between gap-3 px-5 py-3">
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{tk.title}</p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-sm font-medium text-neutral-900">{tk.title}</p>
+                      <p className="text-xs text-neutral-500">
                         Reported {relTime(tk.createdAt)}
-                        {who ? ` · ${who}` : ""}
-                        {tk.cost ? ` · cost ${inr(tk.cost)}` : ""}
+                        {who ? `, ${who}` : ""}
+                        {tk.cost ? `, cost ${inr(tk.cost)}` : ""}
                       </p>
                     </div>
                     <Badge tone={TICKET_STATUS[tk.status].tone}>{TICKET_STATUS[tk.status].label}</Badge>
@@ -301,22 +299,22 @@ export default async function ScreenPage({ params }: { params: Promise<{ id: str
           {(can(user, "finance") || can(user, "team") || user.role === "operations") && (
             <Card>
               <CardHeader title="This month" description={`${fmtDay(ms, { year: false })} – ${fmtDay(me)}`} />
-              <div className="grid grid-cols-2 gap-px bg-slate-100">
+              <div className="grid grid-cols-2 gap-px bg-neutral-100">
                 <div className="bg-white px-5 py-3">
-                  <p className="text-xs text-slate-500">Occupancy</p>
+                  <p className="text-xs text-neutral-500">Occupancy</p>
                   <p className="text-lg font-semibold tabular-nums">{occPct}%</p>
                 </div>
                 <div className="bg-white px-5 py-3">
-                  <p className="text-xs text-slate-500">Revenue</p>
+                  <p className="text-xs text-neutral-500">Revenue</p>
                   <p className="text-lg font-semibold tabular-nums">{inr(revenue)}</p>
                 </div>
                 <div className="bg-white px-5 py-3">
-                  <p className="text-xs text-slate-500">{a.ownership === "third_party" ? "Buying cost" : "Site rent"}</p>
+                  <p className="text-xs text-neutral-500">{a.ownership === "third_party" ? "Buying cost" : "Site rent"}</p>
                   <p className="text-lg font-semibold tabular-nums">{cost ? inr(cost) : "—"}</p>
                 </div>
                 <div className="bg-white px-5 py-3">
-                  <p className="text-xs text-slate-500">Margin</p>
-                  <p className={cn("text-lg font-semibold tabular-nums", margin < 0 ? "text-red-600" : "text-emerald-600")}>{inr(margin)}</p>
+                  <p className="text-xs text-neutral-500">Margin</p>
+                  <p className={cn("text-lg font-semibold tabular-nums", margin < 0 ? "text-red-600" : "text-neutral-900")}>{inr(margin)}</p>
                 </div>
               </div>
             </Card>
@@ -331,13 +329,13 @@ export default async function ScreenPage({ params }: { params: Promise<{ id: str
                   ["Site owner", owner ? <Link href="/screens/owners" className="text-brand-700 hover:underline">{owner.name}</Link> : null],
                   ["Owner phone", owner?.phone],
                   [a.ownership === "third_party" ? "Buying cost" : "Rent", a.rentMonthly ? `${inr(a.rentMonthly)}/month` : null],
-                  ["Agreement ends", a.leaseEnd ? <span className={cn(leaseWarn && "text-amber-700")}>{fmtDay(a.leaseEnd)}</span> : null],
+                  ["Agreement ends", a.leaseEnd ? <span className={cn(leaseWarn && "text-neutral-900")}>{fmtDay(a.leaseEnd)}</span> : null],
                   ["Permit no.", a.permitNumber],
                   ["Permit valid till", a.permitExpiry ? <span className={cn(permitWarn && "text-red-600")}>{fmtDay(a.permitExpiry)}</span> : null],
                 ]}
               />
             </div>
-            {a.notes && <p className="border-t border-slate-100 px-5 py-3 text-sm text-slate-600">{a.notes}</p>}
+            {a.notes && <p className="border-t border-neutral-100 px-5 py-3 text-sm text-neutral-600">{a.notes}</p>}
           </Card>
         </div>
       </div>

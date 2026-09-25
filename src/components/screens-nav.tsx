@@ -17,20 +17,20 @@ export function ScreensNav({ active, counts }: { active: "list" | "availability"
 
 export function saleSummary(a: Pick<Asset, "type" | "saleMode" | "totalSlots" | "slotSeconds" | "loopSeconds">) {
   if (a.type === "hoarding") return "Whole hoarding";
-  const loop = `${a.totalSlots} slots × ${a.slotSeconds ?? "?"}s`;
-  if (a.saleMode === "exclusive") return `Whole screen only (${a.loopSeconds ?? "?"}s loop)`;
-  if (a.saleMode === "slots") return `${loop} · slots only`;
-  return `${loop} · slots or whole screen`;
+  const loop = `${a.totalSlots} slots of ${a.slotSeconds ?? "?"} seconds`;
+  if (a.saleMode === "exclusive") return "Whole screen only";
+  if (a.saleMode === "slots") return `${loop}, sold by slot`;
+  return `${loop}, by slot or whole screen`;
 }
 
 export function priceSummary(a: Pick<Asset, "type" | "saleMode" | "monthlyRate" | "slotRate">) {
   const parts: string[] = [];
-  if (a.type === "hoarding" || a.saleMode !== "slots") parts.push(`${inr(a.monthlyRate)}/month`);
-  if (a.type === "led" && a.saleMode !== "exclusive" && a.slotRate) parts.push(`${inr(a.slotRate)}/slot/month`);
-  return parts.join(" · ");
+  if (a.type === "hoarding" || a.saleMode !== "slots") parts.push(`${inr(a.monthlyRate)} a month${a.type === "led" ? " for the whole screen" : ""}`);
+  if (a.type === "led" && a.saleMode !== "exclusive" && a.slotRate) parts.push(`${inr(a.slotRate)} a month per slot`);
+  return parts.join(", or ");
 }
 
 export function sizeSummary(a: Pick<Asset, "widthFt" | "heightFt" | "resolution">) {
   const size = a.widthFt && a.heightFt ? `${a.widthFt}′ × ${a.heightFt}′` : null;
-  return [size, a.resolution].filter(Boolean).join(" · ");
+  return [size, a.resolution].filter(Boolean).join(", ");
 }

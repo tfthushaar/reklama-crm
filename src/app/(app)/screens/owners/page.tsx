@@ -64,34 +64,34 @@ export default async function OwnersPage() {
             const rent = sites.reduce((s, a) => s + (a.rentMonthly ?? 0), 0);
             return (
               <Card key={o.id}>
-                <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
+                <div className="flex items-start justify-between gap-3 border-b border-neutral-100 px-5 py-4">
                   <div>
-                    <p className="font-semibold text-slate-900">{o.name}</p>
-                    <p className="text-sm text-slate-500">{[o.phone, o.email].filter(Boolean).join(" · ")}</p>
-                    {o.notes && <p className="mt-1 text-xs text-slate-500">{o.notes}</p>}
+                    <p className="font-semibold text-neutral-900">{o.name}</p>
+                    <p className="text-sm text-neutral-500">{[o.phone, o.email].filter(Boolean).join(", ")}</p>
+                    {o.notes && <p className="mt-1 text-xs text-neutral-500">{o.notes}</p>}
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-slate-500">Monthly payout</p>
+                    <p className="text-xs text-neutral-500">Monthly payout</p>
                     <p className="font-semibold tabular-nums">{rent ? inr(rent) : "—"}</p>
                   </div>
                 </div>
                 {sites.length === 0 ? (
-                  <p className="px-5 py-3 text-sm text-slate-500">No screens linked yet.</p>
+                  <p className="px-5 py-3 text-sm text-neutral-500">No screens linked yet.</p>
                 ) : (
-                  <ul className="divide-y divide-slate-100">
+                  <ul className="divide-y divide-neutral-100">
                     {sites.map((a) => {
                       const soon = a.leaseEnd && a.leaseEnd <= addDays(t, 60);
                       return (
                         <li key={a.id} className="flex items-center justify-between gap-3 px-5 py-2.5 text-sm">
                           <div>
-                            <Link href={`/screens/${a.id}`} className="font-medium text-slate-800 hover:underline">
+                            <Link href={`/screens/${a.id}`} className="font-medium text-neutral-800 hover:underline">
                               {a.name}
                             </Link>
-                            <p className="text-xs text-slate-500">{OWNERSHIP_LABEL[a.ownership]}</p>
+                            <p className="text-xs text-neutral-500">{OWNERSHIP_LABEL[a.ownership]}</p>
                           </div>
                           <div className="text-right text-xs">
-                            <p className="font-medium text-slate-700 tabular-nums">{a.rentMonthly ? `${inr(a.rentMonthly)}/mo` : "—"}</p>
-                            <p className={cn("text-slate-500", soon && "font-medium text-amber-700")}>{a.leaseEnd ? `Ends ${fmtDay(a.leaseEnd)}` : ""}</p>
+                            <p className="font-medium text-neutral-700 tabular-nums">{a.rentMonthly ? `${inr(a.rentMonthly)}/mo` : "—"}</p>
+                            <p className={cn("text-neutral-500", soon && "font-medium text-neutral-900")}>{a.leaseEnd ? `Ends ${fmtDay(a.leaseEnd)}` : ""}</p>
                           </div>
                         </li>
                       );

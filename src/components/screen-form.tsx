@@ -111,7 +111,7 @@ export function ScreenFields({
             <Field label="Seconds per slot">
               <Input name="slotSeconds" type="number" min="1" value={slotSec} onChange={(e) => setSlotSec(Number(e.target.value))} />
             </Field>
-            <p className="-mt-2 text-xs text-slate-500 sm:col-span-2">
+            <p className="-mt-2 text-xs text-neutral-500 sm:col-span-2">
               Loop length: <b>{slots * slotSec} seconds</b> — each advertiser shows about {Math.round(3600 / Math.max(1, slots * slotSec))} times an hour.
             </p>
             <input type="hidden" name="loopSeconds" value={slots * slotSec} />
@@ -132,8 +132,8 @@ export function ScreenFields({
         </Field>
       </Section>
 
-      <details className="rounded-lg border border-slate-200 bg-slate-50/60 px-4 py-3" open={!!asset && asset.ownership !== "owned"}>
-        <summary className="cursor-pointer text-sm font-medium text-slate-700 select-none">Site owner, lease and permit</summary>
+      <details className="rounded-lg border border-neutral-200 bg-neutral-50/60 px-4 py-3" open={!!asset && asset.ownership !== "owned"}>
+        <summary className="cursor-pointer text-sm font-medium text-neutral-700 select-none">Site owner, lease and permit</summary>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="Ownership">
             <Select name="ownership" value={ownership} onChange={(e) => setOwnership(e.target.value)}>
@@ -187,7 +187,7 @@ export function ScreenFields({
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <fieldset>
-      <legend className="mb-3 text-sm font-semibold text-slate-900">{title}</legend>
+      <legend className="mb-3 text-sm font-semibold text-neutral-900">{title}</legend>
       <div className="grid gap-4 sm:grid-cols-2">{children}</div>
     </fieldset>
   );

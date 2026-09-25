@@ -13,7 +13,8 @@ import { getSettings } from "@/lib/services/common";
 import { ActionButton, ActionForm, Modal } from "@/components/forms";
 import { ChipInput } from "@/components/inputs";
 import { SendQuoteForm } from "@/components/send-quote";
-import { Badge, Card, CardHeader, Field, Input, LinkButton, Notice, Textarea, buttonClass, cn, table } from "@/components/ui";
+import { ProgressTrack, type Step } from "@/components/progress";
+import { BackLink, Badge, Card, CardHeader, Field, Input, LinkButton, Notice, Textarea, buttonClass, cn, table } from "@/components/ui";
 import {
   approveQuoteAction,
   bookQuoteAction,
@@ -90,84 +91,72 @@ export default async function QuotePage({ params, searchParams }: { params: Prom
   const phone = contact?.phone ?? client.phone;
   const email = contact?.email ?? client.email;
   const firstName = contact?.name?.split(" ")[0] ?? "";
-  const summary = `${media.length} screen${media.length > 1 ? "s" : ""} · ${fmtRange(start, end)} · ${inr(v.total)} incl. GST`;
+  const summary = `${media.length} screen${media.length > 1 ? "s" : ""}, ${fmtRange(start, end)}, ${inr(v.total)} incl. GST`;
   const waText = `Hi ${firstName}, sharing our proposal for "${q.title}" — ${summary}. Quote ${q.number} is valid till ${fmtDay(q.validUntil)}. PDF attached. — ${user.name}, Reklama Global`;
   const mailBody = `Dear ${contact?.name ?? "Sir/Madam"},\n\nPlease find attached our proposal for "${q.title}".\n\n${media
     .map((x) => `• ${x.a?.name} — ${fmtRange(x.l.startDate, x.l.endDate)} (${x.l.mode === "slots" ? `${x.l.slots} slot${(x.l.slots ?? 1) > 1 ? "s" : ""}` : "exclusive"})`)
     .join("\n")}\n\nTotal: ${inr(v.total)} including GST. The quote is valid till ${fmtDay(q.validUntil)} and the screens are held for ${settings.holdHours} hours.\n\nRegards,\n${user.name}\nReklama Global`;
 
-  const steps = [
-    { key: "draft", label: "Draft", done: true },
-    ...(v.maxDiscountPct > 0 && (v.approvedBy || q.status === "pending_approval") ? [{ key: "approval", label: v.approvedBy ? "Approved" : "Approval", done: !!v.approvedBy }] : []),
-    { key: "sent", label: "Sent", done: !!q.sentAt || ["sent", "accepted", "rejected", "expired"].includes(q.status) },
-    { key: "accepted", label: q.status === "rejected" ? "Rejected" : q.status === "expired" ? "Expired" : "Booked", done: ["accepted", "rejected", "expired"].includes(q.status) },
+  const failed = q.status === "rejected" || q.status === "expired";
+  const needsApproval = v.maxDiscountPct > 0 && (!!v.approvedBy || q.status === "pending_approval");
+  const sent = !!q.sentAt || ["sent", "accepted", "rejected", "expired"].includes(q.status);
+  const steps: Step[] = [
+    { label: "Draft", state: q.status === "draft" && !sent ? "current" : "done" },
+    ...(needsApproval ? [{ label: v.approvedBy ? "Approved" : "Approval", state: (v.approvedBy ? "done" : "current") as Step["state"] }] : []),
+    { label: "Sent", state: q.status === "sent" ? "current" : sent ? "done" : "todo" },
+    { label: failed ? (q.status === "rejected" ? "Rejected" : "Expired") : "Booked", state: failed ? "failed" : q.status === "accepted" ? "done" : "todo" },
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-8">
       <div>
-        <Link href="/quotes" className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800">
-          ← Quotes
-        </Link>
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{q.title}</h1>
+        <BackLink href="/quotes" label="Quotes" />
+        <div className="flex flex-wrap items-start justify-between gap-6">
+          <div className="min-w-0">
+            <p className="text-[13px] text-neutral-500 tabular-nums">{q.number}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-3">
+              <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.02em] text-neutral-900">{q.title}</h1>
               <Badge tone={st.tone}>{st.label}</Badge>
             </div>
-            <p className="mt-1 text-sm text-slate-500">
-              {q.number} · for{" "}
-              <Link href={`/clients/${client.id}`} className="font-medium text-brand-700 hover:underline">
+            <p className="mt-1.5 text-[15px] text-neutral-500">
+              For{" "}
+              <Link href={`/clients/${client.id}`} className="text-neutral-900 hover:underline">
                 {client.name}
-              </Link>{" "}
-              · by {row.by} · valid till {fmtDay(q.validUntil)}
+              </Link>
+              , prepared by {row.by}. Valid until {fmtDay(q.validUntil)}.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <a href={`/print/quote/${id}?v=${v.version}`} target="_blank" rel="noreferrer" className={buttonClass("secondary")}>
-              <FileDown /> PDF
+              PDF
             </a>
             {isSales && !q.bookingId && isCurrent && (
               <LinkButton href={`/quotes/${id}/edit`} variant="secondary">
-                <Pencil /> {q.sentAt || q.status !== "draft" && q.status !== "pending_approval" ? "Revise" : "Edit"}
+                {q.sentAt || (q.status !== "draft" && q.status !== "pending_approval") ? "Revise" : "Edit"}
               </LinkButton>
             )}
             {isSales && !q.sentAt && ["draft", "pending_approval"].includes(q.status) && (
               <ActionButton action={deleteDraftQuoteAction} fields={{ id }} variant="ghost" confirm="Delete this draft quote?">
-                <Trash2 />
+                Delete
               </ActionButton>
             )}
           </div>
         </div>
       </div>
 
-      {/* progress + main action */}
-      <Card className="p-5">
-        <ol className="mb-5 flex flex-wrap items-center gap-2 text-sm">
-          {steps.map((s, i) => (
-            <li key={s.key} className="flex items-center gap-2">
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-medium",
-                  s.done ? (s.label === "Rejected" || s.label === "Expired" ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700") : "bg-slate-100 text-slate-500",
-                )}
-              >
-                {s.done && <CheckCircle2 className="size-4" />}
-                {s.label}
-              </span>
-              {i < steps.length - 1 && <span className="h-px w-6 bg-slate-300" />}
-            </li>
-          ))}
-        </ol>
+      <Card className="p-6">
+        <div className="mb-6">
+          <ProgressTrack steps={steps} />
+        </div>
 
         {!isCurrent ? (
           <Notice tone="blue">
             You&apos;re looking at version {v.version}. <Link href={`/quotes/${id}`} className="font-medium underline">See the latest (v{q.currentVersion})</Link>
           </Notice>
         ) : q.status === "pending_approval" ? (
-          <div className="flex flex-col gap-3 rounded-lg bg-amber-50 p-4 sm:flex-row sm:items-center">
-            <ShieldCheck className="size-6 shrink-0 text-amber-600" />
-            <div className="flex-1 text-sm text-amber-900">
+          <div className="flex flex-col gap-3 rounded-lg bg-neutral-100 p-4 sm:flex-row sm:items-center">
+            <ShieldCheck className="size-6 shrink-0 text-neutral-900" />
+            <div className="flex-1 text-sm text-neutral-800">
               <p className="font-semibold">Needs approval: {v.maxDiscountPct}% discount</p>
               <p>This is above {row.by?.split(" ")[0]}&apos;s discount limit. It can be sent once a manager approves.</p>
             </div>
@@ -189,10 +178,10 @@ export default async function QuotePage({ params, searchParams }: { params: Prom
           </div>
         ) : q.status === "draft" ? (
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="flex-1 text-sm text-slate-600">
-              <p className="font-semibold text-slate-900">Ready to send</p>
+            <div className="flex-1 text-sm text-neutral-600">
+              <p className="font-semibold text-neutral-900">Ready to send</p>
               <p>Sending holds these screens for {settings.holdHours} hours so nobody else can sell them meanwhile.</p>
-              {approver && <p className="mt-1 text-emerald-700">Discount approved by {approver}.</p>}
+              {approver && <p className="mt-1 text-neutral-900">Discount approved by {approver}.</p>}
             </div>
             {isSales && (
               <Modal label="Send to client" icon={<Send />} variant="primary" title="Send the quote" description={client.name}>
@@ -213,16 +202,16 @@ export default async function QuotePage({ params, searchParams }: { params: Prom
         ) : q.status === "sent" || q.status === "expired" ? (
           <div className="space-y-3">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-              <div className="flex-1 text-sm text-slate-600">
-                <p className="font-semibold text-slate-900">Waiting for the client&apos;s decision</p>
+              <div className="flex-1 text-sm text-neutral-600">
+                <p className="font-semibold text-neutral-900">Waiting for the client&apos;s decision</p>
                 <p>
                   Sent {relTime(q.sentAt)} {VIA[v.sentVia ?? ""] ?? ""}.{" "}
                   {holdUntil ? (
-                    <span className="inline-flex items-center gap-1 font-medium text-amber-700">
+                    <span className="inline-flex items-center gap-1 font-medium text-neutral-900">
                       <Hourglass className="size-3.5" /> Screens held until {fmtDateTime(holdUntil)}
                     </span>
                   ) : (
-                    <span className="font-medium text-slate-700">The hold has lapsed — screens can be sold to others.</span>
+                    <span className="font-medium text-neutral-700">The hold has lapsed — screens can be sold to others.</span>
                   )}
                 </p>
               </div>
@@ -236,7 +225,7 @@ export default async function QuotePage({ params, searchParams }: { params: Prom
                       </Field>
                     </ActionForm>
                   </Modal>
-                  <Modal label="Client accepted — book it" icon={<CheckCircle2 />} variant="success" title="Confirm the booking" description={`${client.name} · ${summary}`}>
+                  <Modal label="Client accepted — book it" icon={<CheckCircle2 />} variant="success" title="Confirm the booking" description={`${client.name}, ${summary}`}>
                     {conflicts.length > 0 && (
                       <Notice tone="red" className="mb-4">
                         {conflicts.map((x) => x.a?.name).join(", ")} {conflicts.length > 1 ? "are" : "is"} no longer free for these dates. Revise the quote first.
@@ -270,15 +259,15 @@ export default async function QuotePage({ params, searchParams }: { params: Prom
           </div>
         ) : q.status === "accepted" ? (
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <CheckCircle2 className="size-6 text-emerald-600" />
-            <p className="flex-1 text-sm text-slate-700">
+            <CheckCircle2 className="size-6 text-neutral-900" />
+            <p className="flex-1 text-sm text-neutral-700">
               <b>Booked.</b> The screens are reserved and operations has been notified.
             </p>
             {q.bookingId && <LinkButton href={`/bookings/${q.bookingId}`}>Open booking</LinkButton>}
           </div>
         ) : (
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <p className="flex-1 text-sm text-slate-700">
+            <p className="flex-1 text-sm text-neutral-700">
               <b>Rejected</b>
               {q.rejectReason ? `: ${q.rejectReason}` : ""}. You can revise and send a new version.
             </p>
@@ -294,7 +283,7 @@ export default async function QuotePage({ params, searchParams }: { params: Prom
       <div className="grid gap-5 xl:grid-cols-3">
         <div className="min-w-0 space-y-5 xl:col-span-2">
           <Card>
-            <CardHeader title="Screens" description={`${media.length} screen${media.length === 1 ? "" : "s"} · version ${v.version}`} />
+            <CardHeader title="Screens" description={`${media.length} screen${media.length === 1 ? "" : "s"}, version ${v.version}`} />
             <div className={table.wrap}>
               <table className={table.table}>
                 <thead>
@@ -313,23 +302,23 @@ export default async function QuotePage({ params, searchParams }: { params: Prom
                     return (
                       <tr key={l.id} className={table.tr}>
                         <td className={table.td}>
-                          <Link href={`/screens/${a?.id}`} className="font-medium text-slate-900 hover:underline">
+                          <Link href={`/screens/${a?.id}`} className="font-medium text-neutral-900 hover:underline">
                             {a?.name}
                           </Link>
-                          <p className="text-xs text-slate-500">
-                            {a?.code} · {a?.area}
+                          <p className="text-xs text-neutral-500">
+                            {a?.code}, {a?.area}
                           </p>
                           {clash && <p className="text-xs font-medium text-red-600">No longer available</p>}
                         </td>
                         <td className={cn(table.td, "whitespace-nowrap")}>
                           {fmtRange(l.startDate, l.endDate)}
-                          <p className="text-xs text-slate-500">{l.days} days</p>
+                          <p className="text-xs text-neutral-500">{l.days} days</p>
                         </td>
                         <td className={table.td}>
                           {l.mode === "slots" ? (
                             <>
                               {l.slots} of {a?.totalSlots} slots
-                              <p className="text-xs text-slate-500">{(l.slots ?? 1) * (a?.slotSeconds ?? 0)}s per loop</p>
+                              <p className="text-xs text-neutral-500">{(l.slots ?? 1) * (a?.slotSeconds ?? 0)}s per loop</p>
                             </>
                           ) : a?.type === "hoarding" ? (
                             "Whole hoarding"
@@ -339,7 +328,7 @@ export default async function QuotePage({ params, searchParams }: { params: Prom
                         </td>
                         <td className={cn(table.td, "text-right tabular-nums")}>
                           {inr(l.rate)}
-                          {l.mode === "slots" && <p className="text-xs text-slate-500">per slot</p>}
+                          {l.mode === "slots" && <p className="text-xs text-neutral-500">per slot</p>}
                         </td>
                         <td className={cn(table.td, "text-right tabular-nums")}>{l.discountPct ? `${l.discountPct}%` : "—"}</td>
                         <td className={cn(table.td, "text-right font-medium tabular-nums")}>{inr(l.amount)}</td>
@@ -350,7 +339,7 @@ export default async function QuotePage({ params, searchParams }: { params: Prom
                     <tr key={l.id} className={table.tr}>
                       <td className={table.td} colSpan={3}>
                         {l.description}
-                        <p className="text-xs text-slate-500">Qty {l.qty}</p>
+                        <p className="text-xs text-neutral-500">Qty {l.qty}</p>
                       </td>
                       <td className={cn(table.td, "text-right tabular-nums")}>{inr(l.rate)}</td>
                       <td className={cn(table.td, "text-right")}>{l.discountPct ? `${l.discountPct}%` : "—"}</td>
@@ -374,33 +363,33 @@ export default async function QuotePage({ params, searchParams }: { params: Prom
                   <TotalRow label={`SGST ${settings.gstRate / 2}%`} value={inr(v.sgst)} muted />
                 </>
               )}
-              <div className="flex items-baseline justify-between border-t border-slate-200 pt-2">
+              <div className="flex items-baseline justify-between border-t border-neutral-200 pt-2">
                 <span className="font-semibold">Total</span>
                 <span className="text-xl font-semibold tabular-nums">{inr(v.total)}</span>
               </div>
             </div>
-            {v.notes && <p className="border-t border-slate-100 px-5 py-3 text-sm text-slate-600">Note: {v.notes}</p>}
+            {v.notes && <p className="border-t border-neutral-100 px-5 py-3 text-sm text-neutral-600">Note: {v.notes}</p>}
           </Card>
         </div>
 
         <div className="space-y-5">
           <Card>
             <CardHeader title="Versions" />
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-neutral-100">
               {versions.map(({ v: x, by }) => (
                 <li key={x.id}>
                   <Link
                     href={`/quotes/${id}?v=${x.version}`}
-                    className={cn("flex items-center justify-between gap-3 px-5 py-3 hover:bg-slate-50", x.version === v.version && "bg-brand-50/60")}
+                    className={cn("flex items-center justify-between gap-3 px-5 py-3 hover:bg-neutral-50", x.version === v.version && "bg-brand-50/60")}
                   >
                     <div>
-                      <p className="text-sm font-medium text-slate-900">
+                      <p className="text-sm font-medium text-neutral-900">
                         Version {x.version}
-                        {x.version === q.currentVersion && <span className="ml-2 text-xs font-normal text-slate-500">latest</span>}
+                        {x.version === q.currentVersion && <span className="ml-2 text-xs font-normal text-neutral-500">latest</span>}
                       </p>
-                      <p className="text-xs text-slate-500">
-                        {by} · {fmtDay(dayOf(x.createdAt))}
-                        {x.sentVia ? ` · sent ${VIA[x.sentVia] ?? ""}` : ""}
+                      <p className="text-xs text-neutral-500">
+                        {by}, {fmtDay(dayOf(x.createdAt))}
+                        {x.sentVia ? `, sent ${VIA[x.sentVia] ?? ""}` : ""}
                       </p>
                     </div>
                     <span className="text-sm font-medium tabular-nums">{inr(x.total)}</span>
@@ -414,13 +403,13 @@ export default async function QuotePage({ params, searchParams }: { params: Prom
             <ul className="space-y-3 px-5 py-4">
               {log.map(({ a, who }) => (
                 <li key={a.id} className="text-sm">
-                  <p className="text-slate-700">{a.notes}</p>
-                  <p className="text-xs text-slate-400">
-                    {who} · {fmtDateTime(a.occurredAt)}
+                  <p className="text-neutral-700">{a.notes}</p>
+                  <p className="text-xs text-neutral-400">
+                    {who}, {fmtDateTime(a.occurredAt)}
                   </p>
                 </li>
               ))}
-              {log.length === 0 && <li className="text-sm text-slate-500">Not sent yet.</li>}
+              {log.length === 0 && <li className="text-sm text-neutral-500">Not sent yet.</li>}
             </ul>
           </Card>
         </div>
@@ -433,7 +422,7 @@ const VIA: Record<string, string> = { whatsapp: "on WhatsApp", email: "by email"
 
 function TotalRow({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
   return (
-    <div className={cn("flex justify-between gap-4", muted ? "text-slate-500" : "text-slate-700")}>
+    <div className={cn("flex justify-between gap-4", muted ? "text-neutral-500" : "text-neutral-700")}>
       <span>{label}</span>
       <span className="tabular-nums">{value}</span>
     </div>

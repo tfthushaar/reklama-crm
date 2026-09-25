@@ -64,8 +64,8 @@ export function ClientFields({ client, compact }: { client?: Client; compact?: b
         )}
       </div>
 
-      <details className="group rounded-lg border border-slate-200 bg-slate-50/60 px-4 py-3" open={!!client}>
-        <summary className="cursor-pointer text-sm font-medium text-slate-700 select-none">More details (billing, GST, agency)</summary>
+      <details className="group rounded-lg border border-neutral-200 bg-neutral-50/60 px-4 py-3" open={!!client}>
+        <summary className="cursor-pointer text-sm font-medium text-neutral-700 select-none">More details (billing, GST, agency)</summary>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="Type of client">
             <Select name="type" defaultValue={client?.type ?? "advertiser"}>

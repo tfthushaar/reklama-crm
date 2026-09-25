@@ -31,7 +31,7 @@ export default async function NewInvoicePage({ searchParams }: { searchParams: P
     <div>
       <PageHeader
         title="New invoice"
-        subtitle={`${d.client.name} · ${d.booking.title} (${d.booking.number})`}
+        subtitle={`${d.client.name}, ${d.booking.title} (${d.booking.number})`}
         back={{ href: `/bookings/${bookingId}`, label: d.booking.number }}
       />
       <InvoiceForm

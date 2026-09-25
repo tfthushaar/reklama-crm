@@ -43,7 +43,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
 
       {tab === "company" && (
         <Card className="p-5 sm:p-6">
-          <p className="mb-4 text-sm text-slate-500">These details appear on quotations, invoices and receipts.</p>
+          <p className="mb-4 text-sm text-neutral-500">These details appear on quotations, invoices and receipts.</p>
           <ActionForm action={updateCompanyAction} submitLabel="Save company details" resetOnSuccess={false}>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Brand name" required>
@@ -83,7 +83,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                 <Input name="website" defaultValue={s.website ?? ""} />
               </Field>
             </div>
-            <p className="pt-2 text-sm font-semibold text-slate-900">Bank details for payments</p>
+            <p className="pt-2 text-sm font-semibold text-neutral-900">Bank details for payments</p>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Bank & branch">
                 <Input name="bankName" defaultValue={s.bankName ?? ""} />
@@ -145,8 +145,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       {tab === "data" && (
         <div className="space-y-5">
           <Card className="p-5">
-            <p className="font-semibold text-slate-900">Export everything</p>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="font-semibold text-neutral-900">Export everything</p>
+            <p className="mt-1 text-sm text-neutral-600">
               One Excel workbook with clients, contacts, screens, quotes, bookings, invoices, payments, activity and tasks — your data, in a format any
               system can import.
             </p>
@@ -155,8 +155,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             </a>
           </Card>
           <Card className="p-5">
-            <p className="font-semibold text-slate-900">Reset demo data</p>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="font-semibold text-neutral-900">Reset demo data</p>
+            <p className="mt-1 text-sm text-neutral-600">
               Wipes everything and reloads the sample clients, screens and campaigns (dates move to today). Use this before a demo.
             </p>
             <div className="mt-3">
@@ -219,8 +219,8 @@ async function Team() {
                     <span className="flex items-center gap-3">
                       <Avatar name={u.name} />
                       <span>
-                        <span className="block font-medium text-slate-900">{u.name}</span>
-                        <span className="text-xs text-slate-500">{u.email}</span>
+                        <span className="block font-medium text-neutral-900">{u.name}</span>
+                        <span className="text-xs text-neutral-500">{u.email}</span>
                       </span>
                     </span>
                   </td>
@@ -247,7 +247,7 @@ async function Team() {
                         <Field label="New password" hint="Leave empty to keep the current one">
                           <Input name="password" minLength={6} />
                         </Field>
-                        <label className="flex items-center gap-2 text-sm text-slate-700">
+                        <label className="flex items-center gap-2 text-sm text-neutral-700">
                           <input type="checkbox" name="active" defaultChecked={u.active} className="size-4" /> Can sign in
                         </label>
                       </ActionForm>
@@ -261,12 +261,12 @@ async function Team() {
       </Card>
       <Card>
         <CardHeader title="What each role can do" />
-        <ul className="divide-y divide-slate-100">
+        <ul className="divide-y divide-neutral-100">
           {Object.entries(ROLE_HELP).map(([k, v]) => (
             <li key={k} className="flex items-start gap-3 px-5 py-3 text-sm">
               <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-600" />
               <span>
-                <b className="text-slate-900">{ROLE_LABEL[k as keyof typeof ROLE_LABEL]}</b> — <span className="text-slate-600">{v}</span>
+                <b className="text-neutral-900">{ROLE_LABEL[k as keyof typeof ROLE_LABEL]}</b> — <span className="text-neutral-600">{v}</span>
               </span>
             </li>
           ))}
@@ -302,7 +302,7 @@ async function Audit() {
             <tbody>
               {rows.map(({ a, who }) => (
                 <tr key={a.id} className={table.tr}>
-                  <td className={cn(table.td, "whitespace-nowrap text-slate-500")}>{fmtDateTime(a.createdAt)}</td>
+                  <td className={cn(table.td, "whitespace-nowrap text-neutral-500")}>{fmtDateTime(a.createdAt)}</td>
                   <td className={cn(table.td, "whitespace-nowrap")}>{who ?? "System"}</td>
                   <td className={table.td}>
                     <Badge tone="gray" className="mr-2">

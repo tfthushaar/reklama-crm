@@ -101,10 +101,10 @@ export function InvoiceForm({
                 key={k}
                 type="button"
                 onClick={() => setKind(k)}
-                className={cn("rounded-xl border p-4 text-left", kind === k ? "border-brand-600 bg-brand-50 ring-1 ring-brand-600" : "border-slate-200 hover:border-slate-300")}
+                className={cn("rounded-xl border p-4 text-left", kind === k ? "border-brand-600 bg-brand-50 ring-1 ring-brand-600" : "border-neutral-200 hover:border-neutral-300")}
               >
-                <p className="font-medium text-slate-900">{l}</p>
-                <p className="mt-0.5 text-xs text-slate-500">{d}</p>
+                <p className="font-medium text-neutral-900">{l}</p>
+                <p className="mt-0.5 text-xs text-neutral-500">{d}</p>
               </button>
             ))}
           </div>
@@ -123,7 +123,7 @@ export function InvoiceForm({
                         key={pct}
                         type="button"
                         onClick={() => setLines(defaultLines.map(mk))}
-                        className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium hover:border-slate-400"
+                        className="rounded-full border border-neutral-300 px-3 py-1 text-xs font-medium hover:border-neutral-400"
                       >
                         Full booking
                       </button>
@@ -132,7 +132,7 @@ export function InvoiceForm({
                         key={pct}
                         type="button"
                         onClick={() => billPercent(pct)}
-                        className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium hover:border-slate-400"
+                        className="rounded-full border border-neutral-300 px-3 py-1 text-xs font-medium hover:border-neutral-400"
                       >
                         {pct}% advance
                       </button>
@@ -160,7 +160,7 @@ export function InvoiceForm({
                 <button
                   type="button"
                   onClick={() => setLines((xs) => xs.filter((x) => x.key !== l.key))}
-                  className="justify-self-end rounded-md p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                  className="justify-self-end rounded-md p-1.5 text-neutral-400 hover:bg-red-50 hover:text-red-600"
                   aria-label="Remove line"
                 >
                   <X className="size-4" />
@@ -175,7 +175,7 @@ export function InvoiceForm({
               <Plus className="size-4" /> Add line
             </button>
             {alreadyBilled > 0 && (
-              <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              <p className="rounded-lg bg-neutral-100 px-3 py-2 text-xs text-neutral-800">
                 {inr(alreadyBilled)} of this booking&apos;s {inr(bookingTotal)} has already been invoiced. Adjust the amounts so you don&apos;t bill twice.
               </p>
             )}
@@ -195,11 +195,11 @@ export function InvoiceForm({
                 <Input type="date" value={due} min={date} onChange={(e) => setDue(e.target.value)} />
               </Field>
             </div>
-            <div className="space-y-1.5 border-t border-slate-100 pt-3 text-sm">
+            <div className="space-y-1.5 border-t border-neutral-100 pt-3 text-sm">
               <Row k="Amount" v={inr(t.gross)} />
               {isAgency && (
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1 text-slate-600">
+                  <span className="flex items-center gap-1 text-neutral-600">
                     Agency commission
                     <input
                       type="number"
@@ -208,7 +208,7 @@ export function InvoiceForm({
                       min="0"
                       max="30"
                       onChange={(e) => setCommission(Number(e.target.value))}
-                      className="w-14 rounded border border-slate-300 px-1.5 py-0.5 text-right text-xs"
+                      className="w-14 rounded border border-neutral-300 px-1.5 py-0.5 text-right text-xs"
                     />
                     %
                   </span>
@@ -224,7 +224,7 @@ export function InvoiceForm({
                   <Row k={`SGST ${gstRate / 2}%`} v={inr(t.sgst)} muted />
                 </>
               )}
-              <div className="flex items-baseline justify-between border-t border-slate-200 pt-2">
+              <div className="flex items-baseline justify-between border-t border-neutral-200 pt-2">
                 <span className="font-semibold">Total</span>
                 <span className="text-2xl font-semibold tabular-nums">{inr(t.total)}</span>
               </div>
@@ -232,7 +232,7 @@ export function InvoiceForm({
             <Field label="Notes on invoice (optional)">
               <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. PO no. / campaign reference" />
             </Field>
-            {state && !state.ok && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{state.error}</p>}
+            {state && !state.ok && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{state.error}</p>}
             <div className="flex flex-col gap-2 pt-1">
               <SubmitButton name="issue" value="1" className="w-full">
                 Issue {kind === "tax" ? "invoice" : "proforma"} now
@@ -240,7 +240,7 @@ export function InvoiceForm({
               <SubmitButton name="issue" value="0" variant="secondary" className="w-full">
                 Save as draft
               </SubmitButton>
-              <p className="text-center text-xs text-slate-500">Issuing gives it the next number in the series. Drafts don&apos;t use up numbers.</p>
+              <p className="text-center text-xs text-neutral-500">Issuing gives it the next number in the series. Drafts don&apos;t use up numbers.</p>
             </div>
           </div>
         </Card>
@@ -251,7 +251,7 @@ export function InvoiceForm({
 
 function Row({ k, v, muted }: { k: string; v: string; muted?: boolean }) {
   return (
-    <div className={cn("flex justify-between", muted ? "text-slate-500" : "text-slate-700")}>
+    <div className={cn("flex justify-between", muted ? "text-neutral-500" : "text-neutral-700")}>
       <span>{k}</span>
       <span className="tabular-nums">{v}</span>
     </div>

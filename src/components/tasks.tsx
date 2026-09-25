@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { Check, Clock, Plus } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { completeTaskAction, createTaskAction } from "@/app/actions/tasks";
 import { addDays, dueLabel, today } from "@/lib/format";
 import { ActionForm, Modal } from "./forms";
 import { ChipInput, DateQuick } from "./inputs";
-import { Avatar, Badge, Field, Input, Select, Textarea, cn } from "./ui";
+import { Avatar, Field, Input, Select, Textarea, cn } from "./ui";
 
 export type TaskView = {
   id: number;
@@ -35,9 +35,16 @@ export function TaskRow({ task, showAssignee }: { task: TaskView; showAssignee?:
   const overdue = task.status === "open" && new Date(task.dueAt).getTime() < Date.now();
   const refHref = task.refType && task.refId ? `${REF_HREF[task.refType] ?? ""}${task.refId}` : null;
   return (
-    <li className="flex items-start gap-3 px-5 py-3.5">
+    <li className="flex items-start gap-3.5 px-6 py-3.5">
+      {task.status === "open" ? (
+        <CompleteTask task={task} />
+      ) : (
+        <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white">
+          <Check className="size-3 stroke-[2.5]" />
+        </span>
+      )}
       <div className="min-w-0 flex-1">
-        <p className={cn("text-sm font-medium text-slate-900", task.status === "done" && "text-slate-500 line-through")}>
+        <p className={cn("text-sm text-neutral-900", task.status === "done" && "text-neutral-400 line-through")}>
           {refHref ? (
             <Link href={refHref} className="hover:underline">
               {task.title}
@@ -46,34 +53,40 @@ export function TaskRow({ task, showAssignee }: { task: TaskView; showAssignee?:
             task.title
           )}
         </p>
-        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-          <span className={cn("inline-flex items-center gap-1", overdue && "font-medium text-red-600")}>
-            <Clock className="size-3.5" />
-            {overdue ? "Overdue · " : ""}
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-neutral-500">
+          <span className={cn(overdue && "text-red-600")}>
+            {overdue ? "Overdue, " : ""}
             {dueLabel(task.dueAt)}
           </span>
           {task.clientName && task.clientId && (
-            <Link href={`/clients/${task.clientId}`} className="text-brand-700 hover:underline">
+            <Link href={`/clients/${task.clientId}`} className="hover:text-neutral-900 hover:underline">
               {task.clientName}
             </Link>
           )}
-          {task.priority === "high" && task.status === "open" && <Badge tone="red">High priority</Badge>}
+          {task.priority === "high" && task.status === "open" && <span className="font-medium text-neutral-900">High priority</span>}
           {showAssignee && task.assigneeName && (
-            <span className="inline-flex items-center gap-1">
+            <span className="inline-flex items-center gap-1.5">
               <Avatar name={task.assigneeName} size="sm" /> {task.assigneeName}
             </span>
           )}
-          {task.status === "done" && task.outcome && <span>Outcome: {task.outcome}</span>}
+          {task.status === "done" && task.outcome && <span>{task.outcome}</span>}
         </div>
       </div>
-      {task.status === "open" && <CompleteTask task={task} />}
     </li>
   );
 }
 
 export function CompleteTask({ task }: { task: TaskView }) {
   return (
-    <Modal label="Done" icon={<Check />} size="sm" title="Mark as done" description={task.title}>
+    <Modal
+      label={<span className="sr-only">Mark as done</span>}
+      icon={<Check className="opacity-0 transition-opacity group-hover/done:opacity-100" />}
+      variant="ghost"
+      size="sm"
+      triggerClassName="group/done mt-0.5 size-5 h-5 shrink-0 rounded-full p-0 px-0 text-neutral-900 ring-[1.5px] ring-neutral-300 ring-inset hover:bg-transparent hover:ring-neutral-900 [&_svg]:size-3 [&_svg]:stroke-[2.5]"
+      title="Mark as done"
+      description={task.title}
+    >
       <ActionForm action={completeTaskAction} submitLabel="Complete task" submitVariant="success">
         <input type="hidden" name="id" value={task.id} />
         <Field label="What happened?" required group>
@@ -84,8 +97,8 @@ export function CompleteTask({ task }: { task: TaskView }) {
             options={["Spoke to client", "Sent details", "Client confirmed", "No answer", "Not interested"]}
           />
         </Field>
-        <div className="rounded-lg bg-slate-50 p-3">
-          <p className="mb-2 text-sm font-medium text-slate-700">Next follow-up (optional)</p>
+        <div className="rounded-2xl bg-neutral-50 p-4">
+          <p className="mb-2 text-[13px] font-medium text-neutral-700">Next follow-up, if any</p>
           <DateQuick name="nextDate" presets={datePresets()} />
           <Input name="nextTitle" className="mt-2" placeholder="What to do next (optional)" />
         </div>
@@ -101,6 +114,7 @@ export function NewTaskButton({
   clients,
   variant = "primary",
   label = "New reminder",
+  size = "md",
 }: {
   clientId?: number;
   clientName?: string;
@@ -108,9 +122,10 @@ export function NewTaskButton({
   clients?: { id: number; name: string }[];
   variant?: "primary" | "secondary";
   label?: string;
+  size?: "sm" | "md";
 }) {
   return (
-    <Modal label={label} icon={<Plus />} variant={variant} title="Set a reminder" description={clientName ? `For ${clientName}` : undefined}>
+    <Modal label={label} icon={<Plus />} variant={variant} size={size} title="Set a reminder" description={clientName ? `For ${clientName}` : undefined}>
       <ActionForm action={createTaskAction} submitLabel="Save reminder">
         {clientId && <input type="hidden" name="clientId" value={clientId} />}
         <Field label="What needs to be done?" required>

@@ -15,7 +15,7 @@ import { ClientFields } from "@/components/client-form";
 import { LogActivityButton, TimelineEntry, waLink } from "@/components/activity";
 import { StageStepper } from "@/components/stage-stepper";
 import { NewTaskButton, TaskRow, type TaskView } from "@/components/tasks";
-import { Avatar, Badge, Card, CardHeader, EmptyState, Field, Input, KeyValue, LinkButton, Select, Tabs, cn, table } from "@/components/ui";
+import { BackLink, Avatar, Badge, Card, CardHeader, EmptyState, Field, Input, KeyValue, LinkButton, Select, Tabs, buttonClass, cn, table } from "@/components/ui";
 import { addContactAction, assignOwnerAction, updateClientAction } from "@/app/actions/clients";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -129,98 +129,67 @@ export default async function ClientPage({
   ];
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
+    <div className="space-y-8">
       <div>
-        <Link href={c.stage === "won" ? "/clients?tab=won" : "/leads"} className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800">
-          ← {c.stage === "won" ? "Clients" : "Leads"}
-        </Link>
-        <div className="flex flex-wrap items-start justify-between gap-4">
+        <BackLink href={c.stage === "won" ? "/clients?tab=won" : "/leads"} label={c.stage === "won" ? "Clients" : "Leads"} />
+        <div className="flex flex-wrap items-start justify-between gap-6">
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{c.name}</h1>
-              <Badge tone={st.tone}>{st.label}</Badge>
-              {c.type !== "advertiser" && <Badge tone="purple">{CLIENT_TYPE_LABEL[c.type]}</Badge>}
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.02em] text-neutral-900">{c.name}</h1>
+              {c.type !== "advertiser" && <Badge tone="gray">{CLIENT_TYPE_LABEL[c.type]}</Badge>}
             </div>
-            <p className="mt-1 text-sm text-slate-500">
-              {[c.industry, c.city, c.source && `Source: ${c.source}`].filter(Boolean).join(" · ")}
+            <p className="mt-1.5 text-[15px] text-neutral-500">
+              {[c.industry, c.city].filter(Boolean).join(", ")}
+              {row.owner ? <>{[c.industry, c.city].some(Boolean) ? ". " : ""}Handled by {row.owner}</> : null}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Modal label="Edit" icon={<Pencil />} title="Edit client details" wide>
+            <Modal label="Edit" title="Edit client details" wide>
               <ActionForm action={updateClientAction} submitLabel="Save changes" resetOnSuccess={false}>
                 <input type="hidden" name="id" value={c.id} />
                 <ClientFields client={c} />
               </ActionForm>
             </Modal>
-            {isSales && (
-              <LinkButton href={`/quotes/new?client=${c.id}`} variant="primary">
-                <FilePlus2 /> New quote
-              </LinkButton>
-            )}
+            {isSales && <LinkButton href={`/quotes/new?client=${c.id}`}>New quote</LinkButton>}
           </div>
         </div>
       </div>
 
-      <Card className="p-4">
-        <StageStepper clientId={c.id} stage={c.stage} lostReason={c.lostReason} canEdit={isSales} />
-      </Card>
+      <StageStepper clientId={c.id} stage={c.stage} lostReason={c.lostReason} canEdit={isSales} />
 
-      {/* Quick actions */}
-      <Card className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center">
-        <div className="flex min-w-0 items-center gap-3 lg:w-72">
+      <div className="flex flex-col gap-4 border-y border-line py-4 lg:flex-row lg:items-center">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           <Avatar name={primary?.name ?? c.name} />
-          <div className="min-w-0 text-sm leading-tight">
-            <p className="truncate font-medium text-slate-900">{primary?.name ?? "No contact yet"}</p>
-            <p className="truncate text-slate-500">{[primary?.designation, phone].filter(Boolean).join(" · ") || "Add a phone number"}</p>
+          <div className="min-w-0 leading-tight">
+            <p className="truncate text-sm font-medium text-neutral-900">{primary?.name ?? "No contact yet"}</p>
+            <p className="truncate text-[13px] text-neutral-500">{[primary?.designation, phone].filter(Boolean).join(", ") || "Add a phone number"}</p>
           </div>
         </div>
-        <div className="flex flex-1 flex-wrap gap-2 lg:justify-end">
+        <div className="flex flex-wrap gap-1.5">
           <LogActivityButton kind="call" clientId={c.id} clientName={c.name} phone={phone} />
           <LogActivityButton kind="whatsapp" clientId={c.id} clientName={c.name} phone={phone} />
           <LogActivityButton kind="email" clientId={c.id} clientName={c.name} email={email} />
           <LogActivityButton kind="meeting" clientId={c.id} clientName={c.name} />
           <LogActivityButton kind="note" clientId={c.id} clientName={c.name} />
-          <NewTaskButton clientId={c.id} clientName={c.name} variant="secondary" label="Reminder" />
+          <NewTaskButton clientId={c.id} clientName={c.name} variant="secondary" size="sm" label="Reminder" />
         </div>
-      </Card>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        <MiniStat label="Conversations" value={counts[0]!.n} />
-        <MiniStat label="Last contacted" value={c.lastActivityAt ? relTime(c.lastActivityAt) : "Never"} />
-        <MiniStat
-          label="Next follow-up"
-          value={nextTask ? dueLabel(nextTask.dueAt) : "None set"}
-          tone={nextTask && new Date(nextTask.dueAt).getTime() < Date.now() ? "red" : undefined}
-        />
-        <MiniStat label="Business booked" value={business ? inrShort(business) : "—"} />
-        <MiniStat label="Outstanding" value={out.outstanding ? inrShort(out.outstanding) : "—"} tone={out.overdue ? "red" : undefined} />
       </div>
 
       {next && (
-        <div
-          className={cn(
-            "flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center",
-            next.tone === "amber" && "border-amber-200 bg-amber-50",
-            next.tone === "blue" && "border-brand-200 bg-brand-50",
-            next.tone === "green" && "border-emerald-200 bg-emerald-50",
-          )}
-        >
+        <div className="flex flex-col gap-4 rounded-2xl bg-neutral-900 px-6 py-5 text-white sm:flex-row sm:items-center">
           <div className="flex-1">
-            <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Next step</p>
-            <p className="mt-0.5 font-semibold text-slate-900">{next.title}</p>
-            <p className="text-sm text-slate-600">{next.text}</p>
+            <p className="text-[15px] font-medium">{next.title}</p>
+            <p className="mt-0.5 text-[13px] text-neutral-400">{next.text}</p>
           </div>
           {next.href && (
-            <LinkButton href={next.href}>
-              {next.cta} <ArrowRight />
-            </LinkButton>
+            <Link href={next.href} className={buttonClass("secondary", "md", "ring-0")}>
+              {next.cta}
+            </Link>
           )}
         </div>
       )}
 
-      <div className="grid gap-5 xl:grid-cols-3">
+      <div className="grid gap-8 xl:grid-cols-3">
         <div className="min-w-0 xl:col-span-2">
           <Tabs items={tabItems} />
           {tab === "timeline" && <Timeline clientId={id} type={sp.type} userFilter={sp.user} />}
@@ -243,18 +212,18 @@ export default async function ClientPage({
                       {quoteRows.map(({ q, v, by }) => (
                         <tr key={q.id} className={table.tr}>
                           <td className={table.td}>
-                            <Link href={`/quotes/${q.id}`} className="font-medium text-slate-900 hover:underline">
+                            <Link href={`/quotes/${q.id}`} className="font-medium text-neutral-900 hover:underline">
                               {q.title}
                             </Link>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-neutral-500">
                               {q.number}
-                              {q.currentVersion > 1 && ` · version ${q.currentVersion}`} · {fmtDay(dayOf(q.createdAt))}
+                              {q.currentVersion > 1 && `, version ${q.currentVersion}`}, {fmtDay(dayOf(q.createdAt))}
                             </p>
                           </td>
                           <td className={table.td}>
                             <Badge tone={QUOTE_STATUS[q.status].tone}>{QUOTE_STATUS[q.status].label}</Badge>
                           </td>
-                          <td className={cn(table.td, "text-slate-600")}>{by}</td>
+                          <td className={cn(table.td, "text-neutral-600")}>{by}</td>
                           <td className={cn(table.td, "text-right font-medium tabular-nums")}>{inr(v.total)}</td>
                         </tr>
                       ))}
@@ -269,14 +238,14 @@ export default async function ClientPage({
               {bookingRows.length === 0 ? (
                 <EmptyState title="No bookings yet" text="Bookings appear here when a quote is accepted." />
               ) : (
-                <ul className="divide-y divide-slate-100">
+                <ul className="divide-y divide-neutral-100">
                   {bookingRows.map((b) => (
                     <li key={b.id}>
-                      <Link href={`/bookings/${b.id}`} className="flex items-center justify-between gap-3 px-5 py-3.5 hover:bg-slate-50">
+                      <Link href={`/bookings/${b.id}`} className="flex items-center justify-between gap-3 px-5 py-3.5 hover:bg-neutral-50">
                         <div>
-                          <p className="font-medium text-slate-900">{b.title}</p>
-                          <p className="text-xs text-slate-500">
-                            {b.number} · {fmtRange(b.startDate, b.endDate)}
+                          <p className="font-medium text-neutral-900">{b.title}</p>
+                          <p className="text-xs text-neutral-500">
+                            {b.number}, {fmtRange(b.startDate, b.endDate)}
                           </p>
                         </div>
                         <div className="text-right">
@@ -313,10 +282,10 @@ export default async function ClientPage({
                         return (
                           <tr key={i.id} className={table.tr}>
                             <td className={table.td}>
-                              <Link href={`/invoices/${i.id}`} className="font-medium text-slate-900 hover:underline">
+                              <Link href={`/invoices/${i.id}`} className="font-medium text-neutral-900 hover:underline">
                                 {i.number ?? "Draft"}
                               </Link>
-                              <p className="text-xs text-slate-500">{i.kind === "proforma" ? "Proforma" : "Tax invoice"} · {fmtDay(i.issueDate)}</p>
+                              <p className="text-xs text-neutral-500">{i.kind === "proforma" ? "Proforma" : "Tax invoice"}, {fmtDay(i.issueDate)}</p>
                             </td>
                             <td className={table.td}>
                               <Badge tone={overdue ? "red" : INVOICE_STATUS[i.status].tone}>{overdue ? "Overdue" : INVOICE_STATUS[i.status].label}</Badge>
@@ -355,36 +324,36 @@ export default async function ClientPage({
                           <Input name="email" type="email" />
                         </Field>
                       </div>
-                      <label className="flex items-center gap-2 text-sm text-slate-700">
+                      <label className="flex items-center gap-2 text-sm text-neutral-700">
                         <input type="checkbox" name="isPrimary" className="size-4" /> Main contact
                       </label>
                     </ActionForm>
                   </Modal>
                 }
               />
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-neutral-100">
                 {contactRows.map((p) => (
                   <li key={p.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
                     <Avatar name={p.name} />
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-slate-900">
+                      <p className="font-medium text-neutral-900">
                         {p.name} {p.isPrimary && <Badge tone="blue">Main contact</Badge>}
                       </p>
-                      <p className="text-sm text-slate-500">{p.designation}</p>
+                      <p className="text-sm text-neutral-500">{p.designation}</p>
                     </div>
                     <div className="flex gap-1">
                       {p.phone && (
-                        <a href={`tel:${p.phone.replace(/\s/g, "")}`} className="rounded-md p-2 text-slate-500 hover:bg-slate-100" title={p.phone}>
+                        <a href={`tel:${p.phone.replace(/\s/g, "")}`} className="rounded-md p-2 text-neutral-500 hover:bg-neutral-100" title={p.phone}>
                           <Phone className="size-4" />
                         </a>
                       )}
                       {waLink(p.phone) && (
-                        <a href={waLink(p.phone)!} target="_blank" rel="noreferrer" className="rounded-md p-2 text-emerald-600 hover:bg-emerald-50" title="WhatsApp">
+                        <a href={waLink(p.phone)!} target="_blank" rel="noreferrer" className="rounded-md p-2 text-neutral-900 hover:bg-neutral-100" title="WhatsApp">
                           <MessageCircle className="size-4" />
                         </a>
                       )}
                       {p.email && (
-                        <a href={`mailto:${p.email}`} className="rounded-md p-2 text-slate-500 hover:bg-slate-100" title={p.email}>
+                        <a href={`mailto:${p.email}`} className="rounded-md p-2 text-neutral-500 hover:bg-neutral-100" title={p.email}>
                           <Mail className="size-4" />
                         </a>
                       )}
@@ -398,11 +367,32 @@ export default async function ClientPage({
 
         <div className="space-y-5">
           <Card>
+            <CardHeader title="Summary" />
+            <div className="px-6 pb-3">
+              <KeyValue
+                items={[
+                  ["Last contacted", c.lastActivityAt ? relTime(c.lastActivityAt) : "Never"],
+                  [
+                    "Next follow-up",
+                    nextTask ? (
+                      <span className={cn(new Date(nextTask.dueAt).getTime() < Date.now() && "text-red-600")}>{dueLabel(nextTask.dueAt)}</span>
+                    ) : (
+                      "None set"
+                    ),
+                  ],
+                  ["Conversations", String(counts[0]!.n)],
+                  ["Business booked", business ? inr(business) : null],
+                  ["Outstanding", out.outstanding ? <span className={cn(out.overdue && "text-red-600")}>{inr(out.outstanding)}</span> : null],
+                ]}
+              />
+            </div>
+          </Card>
+          <Card>
             <CardHeader title="Follow-ups" description={openTasks.length ? `${openTasks.length} open` : "Nothing scheduled"} />
             {openTasks.length === 0 ? (
-              <p className="px-5 py-4 text-sm text-slate-500">Use &ldquo;Reminder&rdquo; above so this client isn&apos;t forgotten.</p>
+              <p className="px-5 py-4 text-sm text-neutral-500">Use &ldquo;Reminder&rdquo; above so this client isn&apos;t forgotten.</p>
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-neutral-100">
                 {(openTasks as TaskView[]).map((t) => (
                   <TaskRow key={t.id} task={t} showAssignee />
                 ))}
@@ -432,10 +422,10 @@ export default async function ClientPage({
                 )
               }
             />
-            <div className="px-5 py-2">
+            <div className="px-6 pb-3">
               <KeyValue
                 items={[
-                  ["Owner", row.owner ?? <span className="text-amber-700">Unassigned</span>],
+                  ["Owner", row.owner ?? <span className="text-neutral-900">Unassigned</span>],
                   ["Phone", phone],
                   ["Email", email],
                   ["Requirement", c.requirement],
@@ -454,15 +444,6 @@ export default async function ClientPage({
         </div>
       </div>
     </div>
-  );
-}
-
-function MiniStat({ label, value, tone }: { label: string; value: React.ReactNode; tone?: "red" }) {
-  return (
-    <Card className="px-4 py-3">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className={cn("mt-0.5 truncate text-[15px] font-semibold text-slate-900", tone === "red" && "text-red-600")}>{value}</p>
-    </Card>
   );
 }
 
@@ -500,14 +481,14 @@ async function Timeline({ clientId, type, userFilter }: { clientId: number; type
 
   return (
     <Card>
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-5 py-3">
+      <div className="flex flex-wrap items-center gap-2 border-b border-neutral-100 px-5 py-3">
         {[["", "All"], ...Object.entries(ACTIVITY_TYPES).map(([k, v]) => [k, v.label])].map(([k, l]) => (
           <Link
             key={k}
             href={q({ type: k || undefined })}
             className={cn(
               "rounded-full px-3 py-1 text-xs font-medium",
-              (type ?? "") === k ? "bg-brand-700 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200",
+              (type ?? "") === k ? "bg-brand-700 text-white" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200",
             )}
           >
             {l}
@@ -534,7 +515,7 @@ async function Timeline({ clientId, type, userFilter }: { clientId: number; type
         <div className="space-y-6 px-5 py-5">
           {[...groups.entries()].map(([d, items]) => (
             <div key={d}>
-              <p className="mb-3 text-xs font-semibold tracking-wide text-slate-500 uppercase">{label(d)}</p>
+              <p className="mb-4 text-[13px] font-medium text-neutral-500">{label(d)}</p>
               <ul>
                 {items.map(({ a, who }) => (
                   <TimelineEntry key={a.id} a={{ ...a, who }} />

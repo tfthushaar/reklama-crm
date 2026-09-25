@@ -48,9 +48,9 @@ export default async function PrintQuote({ params, searchParams }: { params: Pro
   const prod = lines.filter((x) => x.l.kind === "production");
 
   return (
-    <div className="min-h-screen bg-slate-100 print:bg-white">
+    <div className="min-h-screen bg-neutral-100 print:bg-white">
       <PrintToolbar back={`/quotes/${id}`} label="Print / Save PDF" />
-      <div className="mx-auto my-6 max-w-[210mm] bg-white p-10 text-slate-800 shadow-lg print:my-0 print:p-0 print:shadow-none">
+      <div className="mx-auto my-6 max-w-[210mm] bg-white p-10 text-neutral-800 shadow-lg print:my-0 print:p-0 print:shadow-none">
         <Letterhead
           s={s}
           title="Quotation"
@@ -63,24 +63,24 @@ export default async function PrintQuote({ params, searchParams }: { params: Pro
 
         <section className="mt-6 grid grid-cols-2 gap-6 text-sm">
           <div>
-            <p className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase">Prepared for</p>
-            <p className="mt-1 font-semibold text-slate-900">{c.name}</p>
+            <p className="text-xs text-neutral-500">Prepared for</p>
+            <p className="mt-1 font-semibold text-neutral-900">{c.name}</p>
             {contact && (
-              <p className="text-slate-600">
+              <p className="text-neutral-600">
                 Attn: {contact.name}
                 {contact.designation ? `, ${contact.designation}` : ""}
               </p>
             )}
-            {c.address && <p className="text-slate-600">{c.address}</p>}
-            {c.gstin && <p className="text-slate-600">GSTIN: {c.gstin}</p>}
+            {c.address && <p className="text-neutral-600">{c.address}</p>}
+            {c.gstin && <p className="text-neutral-600">GSTIN: {c.gstin}</p>}
           </div>
           <div>
-            <p className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase">Campaign</p>
-            <p className="mt-1 font-semibold text-slate-900">{q.title}</p>
-            <p className="text-slate-600">
+            <p className="text-xs text-neutral-500">Campaign</p>
+            <p className="mt-1 font-semibold text-neutral-900">{q.title}</p>
+            <p className="text-neutral-600">
               {media.length} screen{media.length === 1 ? "" : "s"} · {fmtRange(media.reduce((m, x) => (x.l.startDate! < m ? x.l.startDate! : m), media[0]?.l.startDate ?? ""), media.reduce((m, x) => (x.l.endDate! > m ? x.l.endDate! : m), media[0]?.l.endDate ?? ""))}
             </p>
-            <p className="text-slate-600">
+            <p className="text-neutral-600">
               Contact: {by.name} · {by.phone} · {by.email}
             </p>
           </div>
@@ -88,7 +88,7 @@ export default async function PrintQuote({ params, searchParams }: { params: Pro
 
         <section className="mt-6 space-y-3">
           {media.map(({ l, a }, i) => (
-            <div key={l.id} className="flex gap-4 rounded-lg border border-slate-200 p-3 break-inside-avoid">
+            <div key={l.id} className="flex gap-4 rounded-lg border border-neutral-200 p-3 break-inside-avoid">
               {a && photoOf.get(a.id) && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={photoOf.get(a.id)} alt="" className="h-24 w-40 shrink-0 rounded object-cover" />
@@ -96,16 +96,16 @@ export default async function PrintQuote({ params, searchParams }: { params: Pro
               <div className="min-w-0 flex-1 text-xs">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">
+                    <p className="text-sm font-semibold text-neutral-900">
                       {i + 1}. {a?.name}
                     </p>
-                    <p className="text-slate-500">
+                    <p className="text-neutral-500">
                       {a?.code} · {[a?.address, a?.area].filter(Boolean).join(", ")}
                     </p>
                   </div>
-                  <p className="text-sm font-semibold whitespace-nowrap text-slate-900 tabular-nums">{inr(l.amount)}</p>
+                  <p className="text-sm font-semibold whitespace-nowrap text-neutral-900 tabular-nums">{inr(l.amount)}</p>
                 </div>
-                <div className="mt-2 grid grid-cols-4 gap-2 text-slate-600">
+                <div className="mt-2 grid grid-cols-4 gap-2 text-neutral-600">
                   <Spec k="Format" v={a?.type === "led" ? `LED ${a.widthFt}′×${a.heightFt}′` : `Hoarding ${a?.widthFt}′×${a?.heightFt}′ ${a?.illumination ?? ""}`} />
                   <Spec k="Period" v={`${fmtRange(l.startDate, l.endDate)} (${l.days} days)`} />
                   <Spec
@@ -117,7 +117,7 @@ export default async function PrintQuote({ params, searchParams }: { params: Pro
                     v={`${inr(l.rate)}/month${l.mode === "slots" ? " per slot" : ""}${l.discountPct ? ` · ${l.discountPct}% off` : ""}`}
                   />
                 </div>
-                {a?.dailyTraffic && <p className="mt-1 text-slate-500">Approx. {num(a.dailyTraffic)} daily traffic</p>}
+                {a?.dailyTraffic && <p className="mt-1 text-neutral-500">Approx. {num(a.dailyTraffic)} daily traffic</p>}
               </div>
             </div>
           ))}
@@ -126,7 +126,7 @@ export default async function PrintQuote({ params, searchParams }: { params: Pro
         {prod.length > 0 && (
           <table className="mt-4 w-full text-xs">
             <thead>
-              <tr className="border-b border-slate-300 text-left text-slate-500">
+              <tr className="border-b border-neutral-300 text-left text-neutral-500">
                 <th className="py-1.5 font-medium">Production & extras</th>
                 <th className="py-1.5 text-right font-medium">Qty</th>
                 <th className="py-1.5 text-right font-medium">Rate</th>
@@ -135,7 +135,7 @@ export default async function PrintQuote({ params, searchParams }: { params: Pro
             </thead>
             <tbody>
               {prod.map(({ l }) => (
-                <tr key={l.id} className="border-b border-slate-100">
+                <tr key={l.id} className="border-b border-neutral-100">
                   <td className="py-1.5">{l.description}</td>
                   <td className="py-1.5 text-right">{num(l.qty)}</td>
                   <td className="py-1.5 text-right tabular-nums">{inr(l.rate)}</td>
@@ -162,32 +162,32 @@ export default async function PrintQuote({ params, searchParams }: { params: Pro
                   <T k={`SGST @ ${s.gstRate / 2}%`} v={inr(v.sgst)} />
                 </>
               )}
-              <tr className="border-t-2 border-[#0f2640]">
-                <td className="pt-2 font-bold text-[#0f2640]">Total</td>
-                <td className="pt-2 text-right text-lg font-bold text-[#0f2640] tabular-nums">{inr(v.total)}</td>
+              <tr className="border-t-2 border-neutral-900">
+                <td className="pt-2 font-bold text-neutral-900">Total</td>
+                <td className="pt-2 text-right text-lg font-bold text-neutral-900 tabular-nums">{inr(v.total)}</td>
               </tr>
             </tbody>
           </table>
         </section>
-        <p className="mt-1 text-right text-xs text-slate-500 italic">{rupeesInWords(v.total)}</p>
+        <p className="mt-1 text-right text-xs text-neutral-500 italic">{rupeesInWords(v.total)}</p>
 
-        {v.notes && <p className="mt-4 rounded bg-slate-50 p-3 text-sm text-slate-700">{v.notes}</p>}
+        {v.notes && <p className="mt-4 rounded bg-neutral-50 p-3 text-sm text-neutral-700">{v.notes}</p>}
 
         <section className="mt-6 grid grid-cols-2 gap-6 text-xs break-inside-avoid">
           <div>
-            <p className="mb-1 font-semibold text-slate-700">Terms & conditions</p>
-            <p className="leading-relaxed whitespace-pre-line text-slate-600">{v.terms}</p>
+            <p className="mb-1 font-semibold text-neutral-700">Terms & conditions</p>
+            <p className="leading-relaxed whitespace-pre-line text-neutral-600">{v.terms}</p>
           </div>
           <div>
-            <p className="mb-1 font-semibold text-slate-700">Bank details</p>
-            <p className="leading-relaxed text-slate-600">
+            <p className="mb-1 font-semibold text-neutral-700">Bank details</p>
+            <p className="leading-relaxed text-neutral-600">
               {s.bankName}
               <br />
               A/c: {s.bankAccount} · IFSC: {s.bankIfsc}
               <br />
               UPI: {s.upiId}
             </p>
-            <div className="mt-10 border-t border-slate-300 pt-1 text-slate-500">For {s.companyName} — Authorised signatory</div>
+            <div className="mt-10 border-t border-neutral-300 pt-1 text-neutral-500">For {s.companyName} — Authorised signatory</div>
           </div>
         </section>
       </div>
@@ -198,8 +198,8 @@ export default async function PrintQuote({ params, searchParams }: { params: Pro
 function Spec({ k, v }: { k: string; v: string }) {
   return (
     <div>
-      <p className="text-[10px] tracking-wide text-slate-400 uppercase">{k}</p>
-      <p className="text-slate-700">{v}</p>
+      <p className="text-[11px] text-neutral-400">{k}</p>
+      <p className="text-neutral-700">{v}</p>
     </div>
   );
 }
@@ -207,7 +207,7 @@ function Spec({ k, v }: { k: string; v: string }) {
 function T({ k, v, bold }: { k: string; v: string; bold?: boolean }) {
   return (
     <tr>
-      <td className={bold ? "py-0.5 font-semibold" : "py-0.5 text-slate-600"}>{k}</td>
+      <td className={bold ? "py-0.5 font-semibold" : "py-0.5 text-neutral-600"}>{k}</td>
       <td className={`py-0.5 text-right tabular-nums ${bold ? "font-semibold" : ""}`}>{v}</td>
     </tr>
   );

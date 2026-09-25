@@ -21,7 +21,7 @@ export function PaymentFields({ balance, taxable }: { balance: number; taxable: 
   return (
     <>
       <div>
-        <p className="mb-1.5 text-sm font-medium text-slate-700">Did the client deduct TDS?</p>
+        <p className="mb-1.5 text-sm font-medium text-neutral-700">Did the client deduct TDS?</p>
         <div className="flex flex-wrap gap-1.5">
           {[
             [null, "No TDS"],
@@ -35,7 +35,7 @@ export function PaymentFields({ balance, taxable }: { balance: number; taxable: 
               onClick={() => applyTds(p as number | null)}
               className={cn(
                 "rounded-full border px-3 py-1 text-xs font-medium",
-                pct === p ? "border-brand-600 bg-brand-600 text-white" : "border-slate-300 bg-white text-slate-700 hover:border-slate-400",
+                pct === p ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-400",
               )}
             >
               {l}
@@ -51,7 +51,7 @@ export function PaymentFields({ balance, taxable }: { balance: number; taxable: 
           <Input name="tds" type="number" min="0" value={tds} onChange={(e) => setTds(Number(e.target.value))} />
         </Field>
       </div>
-      <p className="-mt-2 text-xs text-slate-500">
+      <p className="-mt-2 text-xs text-neutral-500">
         Settles ₹{(amount + tds).toLocaleString("en-IN")} of the ₹{balance.toLocaleString("en-IN")} balance
         {amount + tds < balance ? ` — ₹${(balance - amount - tds).toLocaleString("en-IN")} will still be due.` : "."}
       </p>

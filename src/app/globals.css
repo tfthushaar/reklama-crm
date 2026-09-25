@@ -1,51 +1,72 @@
 @import "tailwindcss";
 
+/*
+  Monochrome system. Ink is the brand: near-black type on white and a
+  neutral grey scale for every surface, divider and state. Red is reserved
+  for things that are genuinely wrong (overdue, errors, destructive actions).
+*/
 @theme {
-  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 
-  --color-brand-50: #eef4fa;
-  --color-brand-100: #d7e5f2;
-  --color-brand-200: #afcae4;
-  --color-brand-300: #7ea8d0;
-  --color-brand-400: #4f85bb;
-  --color-brand-500: #2f6aa3;
-  --color-brand-600: #245a8d;
-  --color-brand-700: #1d4a73;
-  --color-brand-800: #173b5c;
-  --color-brand-900: #0f2640;
-  --color-brand-950: #0a1a2d;
+  /* "brand" is ink: kept as a named scale so components read semantically */
+  --color-brand-50: #fafafa;
+  --color-brand-100: #f4f4f4;
+  --color-brand-200: #e6e6e6;
+  --color-brand-300: #d1d1d1;
+  --color-brand-400: #a1a1a1;
+  --color-brand-500: #737373;
+  --color-brand-600: #3f3f3f;
+  --color-brand-700: #171717;
+  --color-brand-800: #0f0f0f;
+  --color-brand-900: #0a0a0a;
+  --color-brand-950: #000000;
 
-  --color-accent-500: #f28c28;
-  --color-accent-600: #d9731a;
+  --color-accent-500: #171717;
+  --color-accent-600: #0a0a0a;
+
+  --color-canvas: #fafafa;
+  --color-line: #ebebeb;
 }
 
-html {
-  -webkit-text-size-adjust: 100%;
-}
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  
+  body {
+    background: var(--color-canvas);
+    color: #171717;
+    font-feature-settings: "ss01", "cv11";
+    letter-spacing: -0.005em;
+  }
+  
+  ::selection {
+    background: #171717;
+    color: #fff;
+  }
+  
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
 
-body {
-  background: #f5f7fa;
-  color: #0f172a;
-  font-feature-settings: "cv11", "ss01";
-}
-
-::selection {
-  background: var(--color-brand-100);
+  :focus-visible {
+    outline: 2px solid #171717;
+    outline-offset: 2px;
+  }
 }
 
 dialog::backdrop {
-  background: rgb(15 23 42 / 0.45);
-  backdrop-filter: blur(2px);
+  background: rgb(0 0 0 / 0.32);
 }
 
 dialog[open] {
-  animation: pop 0.14s ease-out;
+  animation: rise 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-@keyframes pop {
+@keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(6px) scale(0.99);
+    transform: translateY(8px) scale(0.985);
   }
   to {
     opacity: 1;
@@ -55,7 +76,9 @@ dialog[open] {
 
 .scrollbar-thin {
   scrollbar-width: thin;
+  scrollbar-color: #d4d4d4 transparent;
 }
+
 
 @media print {
   .no-print {

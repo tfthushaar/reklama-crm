@@ -25,9 +25,9 @@ export default async function PrintReceipt({ params }: { params: Promise<{ id: s
   const s = await getSettings(db);
 
   return (
-    <div className="min-h-screen bg-slate-100 print:bg-white">
+    <div className="min-h-screen bg-neutral-100 print:bg-white">
       <PrintToolbar back={`/invoices/${i.id}`} label="Print / Save PDF" />
-      <div className="mx-auto my-6 max-w-[210mm] bg-white p-10 text-slate-800 shadow-lg print:my-0 print:p-0 print:shadow-none">
+      <div className="mx-auto my-6 max-w-[210mm] bg-white p-10 text-neutral-800 shadow-lg print:my-0 print:p-0 print:shadow-none">
         <Letterhead s={s} title="Payment Receipt" meta={[["Receipt no.", p.receiptNumber], ["Date", fmtDay(p.date)]]} />
         <div className="mt-8 space-y-4 text-[15px] leading-relaxed">
           <p>
@@ -43,22 +43,22 @@ export default async function PrintReceipt({ params }: { params: Promise<{ id: s
         <table className="mt-8 w-full max-w-md text-sm">
           <tbody>
             <tr>
-              <td className="py-1 text-slate-600">Amount received</td>
+              <td className="py-1 text-neutral-600">Amount received</td>
               <td className="py-1 text-right font-semibold">{inr(p.amount)}</td>
             </tr>
             {p.tds > 0 && (
               <tr>
-                <td className="py-1 text-slate-600">TDS adjusted</td>
+                <td className="py-1 text-neutral-600">TDS adjusted</td>
                 <td className="py-1 text-right">{inr(p.tds)}</td>
               </tr>
             )}
-            <tr className="border-t border-slate-300">
+            <tr className="border-t border-neutral-300">
               <td className="py-1 font-semibold">Total settled</td>
               <td className="py-1 text-right font-semibold">{inr(p.amount + p.tds)}</td>
             </tr>
           </tbody>
         </table>
-        <div className="mt-20 w-64 border-t border-slate-300 pt-1 text-sm text-slate-500">For {s.legalName ?? s.companyName}</div>
+        <div className="mt-20 w-64 border-t border-neutral-300 pt-1 text-sm text-neutral-500">For {s.legalName ?? s.companyName}</div>
       </div>
     </div>
   );

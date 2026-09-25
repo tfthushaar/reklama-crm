@@ -28,7 +28,7 @@ export function ChipInput({
             onClick={() => setValue(o)}
             className={cn(
               "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-              value === o ? "border-brand-600 bg-brand-600 text-white" : "border-slate-300 bg-white text-slate-700 hover:border-slate-400",
+              value === o ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-400",
             )}
           >
             {o}
@@ -54,7 +54,7 @@ export function Segmented({
 }) {
   const [value, setValue] = useState(defaultValue ?? options[0]?.value ?? "");
   return (
-    <div className="inline-flex rounded-lg border border-slate-300 bg-slate-50 p-0.5">
+    <div className="inline-flex rounded-full bg-neutral-100 p-1">
       <input type="hidden" name={name} value={value} />
       {options.map((o) => (
         <button
@@ -65,8 +65,8 @@ export function Segmented({
             onChange?.(o.value);
           }}
           className={cn(
-            "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-            value === o.value ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900",
+            "rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors",
+            value === o.value ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-600 hover:text-neutral-900",
           )}
         >
           {o.label}
@@ -89,7 +89,7 @@ export function DateQuick({ name, defaultValue, presets }: { name: string; defau
             onClick={() => setValue(p.value)}
             className={cn(
               "rounded-full border px-3 py-1 text-xs font-medium",
-              value === p.value ? "border-brand-600 bg-brand-600 text-white" : "border-slate-300 bg-white text-slate-700 hover:border-slate-400",
+              value === p.value ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-400",
             )}
           >
             {p.label}

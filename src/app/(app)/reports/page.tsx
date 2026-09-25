@@ -10,7 +10,7 @@ import { addDays, daysBetween, eachDay, fmtRange, fy, inr, inrShort, istDateTime
 import { can } from "@/lib/permissions";
 import { outstandingSummary, paidSq } from "@/lib/queries";
 import { BarList, Meter } from "@/components/charts";
-import { Avatar, Card, CardHeader, Input, PageHeader, Stat, Tabs, buttonClass, cn, table } from "@/components/ui";
+import { Avatar, Card, CardHeader, Input, PageHeader, Stat, StatRow, Tabs, buttonClass, cn, table } from "@/components/ui";
 
 export const metadata = { title: "Reports" };
 
@@ -78,9 +78,9 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
         ]}
       />
       <div className="mb-5 flex flex-wrap items-center gap-2">
-        <div className="flex flex-wrap gap-1 rounded-lg bg-slate-100 p-1">
+        <div className="flex flex-wrap gap-1 rounded-full bg-neutral-100 p-1">
           {RANGES.map((x) => (
-            <Link key={x.key} href={q({ range: x.key })} className={cn("rounded-md px-3 py-1.5 text-sm font-medium", r.key === x.key ? "bg-white shadow-sm" : "text-slate-600")}>
+            <Link key={x.key} href={q({ range: x.key })} className={cn("rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors", r.key === x.key ? "bg-white shadow-sm" : "text-neutral-600")}>
               {x.label}
             </Link>
           ))}
@@ -88,11 +88,11 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
         <form className="flex items-center gap-2">
           <input type="hidden" name="tab" value={tab} />
           <Input type="date" name="from" defaultValue={r.from === "2000-01-01" ? "" : r.from} className="h-9 w-40" />
-          <span className="text-sm text-slate-500">to</span>
+          <span className="text-sm text-neutral-500">to</span>
           <Input type="date" name="to" defaultValue={r.to} className="h-9 w-40" />
           <button className={buttonClass("secondary", "sm")}>Apply</button>
         </form>
-        <span className="ml-auto text-sm text-slate-500">{r.key === "all" ? "All time" : fmtRange(r.from, r.to)}</span>
+        <span className="ml-auto text-sm text-neutral-500">{r.key === "all" ? "All time" : fmtRange(r.from, r.to)}</span>
       </div>
 
       {tab === "sales" && <SalesReport from={r.from} to={r.to} fromTs={fromTs} toTs={toTs} />}
@@ -169,12 +169,12 @@ async function SalesReport({ fromTs, toTs }: { from: string; to: string; fromTs:
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <StatRow>
         <Stat label="Business booked" value={inrShort(Number(booked!.value))} hint={`${booked!.n} booking${booked!.n === 1 ? "" : "s"}`} />
         <Stat label="Quotes sent" value={sent!.n} />
-        <Stat label="Win rate" value={winRate === null ? "—" : `${winRate}%`} hint={`${decided!.won} won · ${decided!.lost} lost`} />
+        <Stat label="Win rate" value={winRate === null ? "—" : `${winRate}%`} hint={`${decided!.won} won, ${decided!.lost} lost`} />
         <Stat label="New leads" value={newLeads!.n} />
-      </div>
+      </StatRow>
       <div className="grid gap-5 lg:grid-cols-2">
         <Card>
           <CardHeader title="Pipeline right now" description="Number of companies at each stage" />
@@ -183,7 +183,7 @@ async function SalesReport({ fromTs, toTs }: { from: string; to: string; fromTs:
               rows={STAGES.map((s) => ({ label: s.label, value: stageCounts.find((c) => c.stage === s.key)?.n ?? 0 }))}
               format={(n) => `${n}`}
             />
-            <p className="mt-3 text-xs text-slate-500">
+            <p className="mt-3 text-xs text-neutral-500">
               {stageCounts.filter((c) => OPEN_STAGES.includes(c.stage)).reduce((s, c) => s + c.n, 0)} open leads in total.
             </p>
           </div>
@@ -219,7 +219,7 @@ async function SalesReport({ fromTs, toTs }: { from: string; to: string; fromTs:
                   <td className={table.td}>
                     <span className="flex items-center gap-2">
                       <Avatar name={p.name} size="sm" /> <span className="font-medium">{p.name}</span>
-                      <span className="text-xs text-slate-400">{ROLE_LABEL[p.role]}</span>
+                      <span className="text-xs text-neutral-400">{ROLE_LABEL[p.role]}</span>
                     </span>
                   </td>
                   <td className={cn(table.td, "text-right tabular-nums")}>{created}</td>
@@ -297,7 +297,7 @@ async function TeamReport({ fromTs, toTs }: { fromTs: Date; toTs: Date }) {
                   <td className={table.td}>
                     <span className="flex items-center gap-2">
                       <Avatar name={x.p.name} size="sm" /> <span className="font-medium">{x.p.name}</span>
-                      <span className="text-xs text-slate-400">{ROLE_LABEL[x.p.role]}</span>
+                      <span className="text-xs text-neutral-400">{ROLE_LABEL[x.p.role]}</span>
                     </span>
                   </td>
                   {[x.call, x.whatsapp, x.email, x.meeting, x.note, x.done].map((n, i) => (
@@ -351,14 +351,14 @@ async function ScreensReport({ from, to }: { from: string; to: string }) {
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <StatRow>
         <Stat label="Average occupancy" value={`${Math.round(avgOcc)}%`} hint="Share of sellable screen-time sold" />
         <Stat label="Screen revenue" value={inrShort(totalRev)} hint="Pro-rated to this period, before GST" />
         <Stat label="Site costs" value={inrShort(totalCost)} hint="Rent and buying costs" />
         <Stat label="Idle screens" value={idle} hint="Nothing sold in this period" tone={idle ? "amber" : undefined} />
-      </div>
+      </StatRow>
       <Card>
-        <CardHeader title="Screen by screen" description={`${fmtRange(from, to)} · for LED screens, occupancy counts slots sold`} />
+        <CardHeader title="Screen by screen" description={`${fmtRange(from, to)}, for LED screens, occupancy counts slots sold`} />
         <div className={table.wrap}>
           <table className={table.table}>
             <thead>
@@ -374,11 +374,11 @@ async function ScreensReport({ from, to }: { from: string; to: string }) {
               {rows.map(({ a, occupancy, revenue, cost, margin }) => (
                 <tr key={a.id} className={table.tr}>
                   <td className={table.td}>
-                    <Link href={`/screens/${a.id}`} className="font-medium text-slate-900 hover:underline">
+                    <Link href={`/screens/${a.id}`} className="font-medium text-neutral-900 hover:underline">
                       {a.name}
                     </Link>
-                    <p className="text-xs text-slate-500">
-                      {a.type === "led" ? "LED" : "Hoarding"} · {a.area}
+                    <p className="text-xs text-neutral-500">
+                      {a.type === "led" ? "LED" : "Hoarding"}, {a.area}
                     </p>
                   </td>
                   <td className={table.td}>
@@ -388,7 +388,7 @@ async function ScreensReport({ from, to }: { from: string; to: string }) {
                     </div>
                   </td>
                   <td className={cn(table.td, "text-right tabular-nums")}>{inr(revenue)}</td>
-                  <td className={cn(table.td, "text-right tabular-nums text-slate-600")}>{cost ? inr(cost) : "—"}</td>
+                  <td className={cn(table.td, "text-right tabular-nums text-neutral-600")}>{cost ? inr(cost) : "—"}</td>
                   <td className={cn(table.td, "text-right font-medium tabular-nums", margin < 0 && "text-red-600")}>{inr(margin)}</td>
                 </tr>
               ))}
@@ -434,12 +434,12 @@ async function MoneyReport({ from, to }: { from: string; to: string }) {
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <StatRow>
         <Stat label="Invoiced" value={inrShort(Number(inv!.total))} hint={`incl. ${inrShort(Number(inv!.gst))} GST`} />
         <Stat label="Collected" value={inrShort(Number(pay!.amount))} tone="green" />
         <Stat label="TDS deducted by clients" value={inrShort(Number(pay!.tds))} hint="Collect TDS certificates" />
         <Stat label="Outstanding today" value={inrShort(out.outstanding)} hint={`${inrShort(out.overdue)} overdue`} tone={out.overdue ? "red" : undefined} href="/invoices?tab=overdue" />
-      </div>
+      </StatRow>
       <div className="grid gap-5 lg:grid-cols-2">
         <Card>
           <CardHeader title="Collections by month" />
@@ -457,15 +457,15 @@ async function MoneyReport({ from, to }: { from: string; to: string }) {
         <Card>
           <CardHeader title="Who owes what" description="Unpaid invoices by client, largest first" />
           {byClient.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-slate-500">Nothing outstanding.</p>
+            <p className="px-5 py-6 text-sm text-neutral-500">Nothing outstanding.</p>
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-neutral-100">
               {byClient
                 .sort((a, b) => Number(b.balance) - Number(a.balance))
                 .map((c) => (
                   <li key={c.id} className="flex items-center justify-between gap-3 px-5 py-3">
                     <div>
-                      <Link href={`/clients/${c.id}?tab=invoices`} className="font-medium text-slate-900 hover:underline">
+                      <Link href={`/clients/${c.id}?tab=invoices`} className="font-medium text-neutral-900 hover:underline">
                         {c.name}
                       </Link>
                       {Number(c.overdue) > 0 && <p className="text-xs font-medium text-red-600">{inr(Number(c.overdue))} overdue</p>}

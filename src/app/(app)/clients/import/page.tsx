@@ -47,8 +47,8 @@ export default async function ImportClientsPage() {
               <option value="none">Nobody yet (manager assigns later)</option>
             </Select>
           </Field>
-          <label className="flex items-center gap-2 text-sm text-slate-700">
-            <input type="checkbox" name="skipDuplicates" defaultChecked className="size-4 rounded border-slate-300" />
+          <label className="flex items-center gap-2 text-sm text-neutral-700">
+            <input type="checkbox" name="skipDuplicates" defaultChecked className="size-4 rounded border-neutral-300" />
             Skip companies that already exist (matched by name, phone, email or GSTIN)
           </label>
         </ActionForm>

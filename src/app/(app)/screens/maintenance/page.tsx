@@ -58,7 +58,7 @@ export default async function MaintenancePage() {
               <Field label="Details">
                 <Textarea name="notes" rows={2} />
               </Field>
-              <label className="flex items-center gap-2 text-sm text-slate-700">
+              <label className="flex items-center gap-2 text-sm text-neutral-700">
                 <input type="checkbox" name="takeOffline" className="size-4" /> Mark screen as under maintenance
               </label>
             </ActionForm>
@@ -85,18 +85,18 @@ export default async function MaintenancePage() {
                 {rows.map(({ t, asset, assetId, who }) => (
                   <tr key={t.id} className={cn(table.tr, t.status === "resolved" && "opacity-60")}>
                     <td className={table.td}>
-                      <p className="font-medium text-slate-900">{t.title}</p>
-                      <p className="text-xs text-slate-500">
+                      <p className="font-medium text-neutral-900">{t.title}</p>
+                      <p className="text-xs text-neutral-500">
                         <Link href={`/screens/${assetId}`} className="hover:underline">
                           {asset}
                         </Link>{" "}
-                        · reported {relTime(t.createdAt)}
+                       , reported {relTime(t.createdAt)}
                       </p>
                     </td>
                     <td className={table.td}>
                       <Badge tone={t.priority === "high" ? "red" : t.priority === "low" ? "gray" : "blue"}>{t.priority}</Badge>
                     </td>
-                    <td className={cn(table.td, "text-slate-600")}>{who ?? "—"}</td>
+                    <td className={cn(table.td, "text-neutral-600")}>{who ?? "—"}</td>
                     <td className={table.td}>
                       <Badge tone={TICKET_STATUS[t.status].tone}>{TICKET_STATUS[t.status].label}</Badge>
                     </td>

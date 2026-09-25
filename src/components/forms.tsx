@@ -17,6 +17,7 @@ export function toast(message: string, tone: "success" | "error" = "success") {
 
 export function Toaster() {
   const [items, setItems] = useState<{ id: number; message: string; tone: string }[]>([]);
+  const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const on = (e: Event) => {
       const { message, tone } = (e as CustomEvent).detail;
@@ -27,14 +28,30 @@ export function Toaster() {
     window.addEventListener("rk-toast", on);
     return () => window.removeEventListener("rk-toast", on);
   }, []);
+  // A manual popover lives in the top layer, so toasts show above open dialogs.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el?.showPopover) return;
+    try {
+      if (items.length) {
+        if (el.matches(":popover-open")) el.hidePopover();
+        el.showPopover();
+      } else if (el.matches(":popover-open")) el.hidePopover();
+    } catch {}
+  }, [items]);
   return (
-    <div className="pointer-events-none fixed right-4 bottom-4 z-[100] flex flex-col items-end gap-2">
+    <div
+      ref={ref}
+      popover="manual"
+      className="pointer-events-none fixed inset-x-0 top-auto bottom-6 m-0 flex w-full flex-col items-center gap-2 overflow-visible border-0 bg-transparent p-0"
+    >
       {items.map((t) => (
         <div
           key={t.id}
+          role="status"
           className={cn(
-            "pointer-events-auto rounded-lg px-4 py-3 text-sm font-medium text-white shadow-lg",
-            t.tone === "error" ? "bg-red-600" : "bg-slate-900",
+            "pointer-events-auto rounded-full px-4 py-2.5 text-[13px] font-medium text-white shadow-lg shadow-black/10",
+            t.tone === "error" ? "bg-red-600" : "bg-neutral-900",
           )}
         >
           {t.message}
@@ -113,10 +130,10 @@ export function ActionForm({
     <form ref={formRef} action={formAction} className={cn("space-y-4", className)}>
       {children}
       {state && !state.ok && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-800">{state.error}</div>
+        <div className="rounded-xl bg-red-50 px-3.5 py-2.5 text-[13px] text-red-700">{state.error}</div>
       )}
       {!hideSubmit && (
-        <div className="flex justify-end gap-2 pt-1">
+        <div className="flex justify-end gap-2 pt-2">
           {modal && (
             <button type="button" onClick={modal.close} className={buttonClass("ghost")}>
               Cancel
@@ -175,22 +192,22 @@ export function Modal({
         ref={ref}
         onClose={() => setOpen(false)}
         className={cn(
-          "m-auto w-[calc(100%-2rem)] rounded-2xl bg-white p-0 text-left shadow-2xl",
+          "m-auto w-[calc(100%-2rem)] rounded-3xl bg-white p-0 text-left shadow-2xl shadow-black/10",
           wide ? "max-w-2xl" : "max-w-md",
           className,
         )}
       >
         <ModalCtx.Provider value={{ close }}>
-          <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
+          <div className="flex items-start justify-between gap-4 px-6 pt-6 pb-2">
             <div>
-              <h3 className="text-base font-semibold text-slate-900">{title}</h3>
-              {description && <p className="mt-0.5 text-sm text-slate-500">{description}</p>}
+              <h3 className="text-[17px] font-semibold tracking-[-0.01em] text-neutral-900">{title}</h3>
+              {description && <p className="mt-0.5 text-[13px] text-neutral-500">{description}</p>}
             </div>
-            <button type="button" onClick={close} className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Close">
-              <X className="size-5" />
+            <button type="button" onClick={close} className="-mt-1 -mr-2 rounded-full p-2 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-900" aria-label="Close">
+              <X className="size-4 stroke-[1.75]" />
             </button>
           </div>
-          <div className="max-h-[75vh] overflow-y-auto px-5 py-4">{open && children}</div>
+          <div className="max-h-[75vh] overflow-y-auto px-6 pt-3 pb-6">{open && children}</div>
         </ModalCtx.Provider>
       </dialog>
     </>

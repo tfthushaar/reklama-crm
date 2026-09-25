@@ -7,7 +7,7 @@ import type { LineCheck } from "@/app/actions/quotes";
 import { addDays, daysBetween, fmtRange, inr, num } from "@/lib/format";
 import { computeTotals, priceLine, type LineInput } from "@/lib/pricing";
 import { ActionForm, type ActionResult } from "./forms";
-import { Badge, Card, CardHeader, Field, Input, Select, Textarea, cn } from "./ui";
+import { Card, CardHeader, Field, Input, Select, StatusDot, Textarea, buttonClass, cn } from "./ui";
 
 export type AssetOpt = {
   id: number;
@@ -253,9 +253,9 @@ export function QuoteBuilder({
                   </option>
                 ))}
               </Select>
-              <span className="mt-1 block text-xs text-slate-500">
+              <span className="mt-1 block text-xs text-neutral-500">
                 Not listed?{" "}
-                <Link href="/clients/new" className="text-brand-700 hover:underline">
+                <Link href="/clients/new" className="text-neutral-900 underline underline-offset-2">
                   Add a lead first
                 </Link>
               </span>
@@ -289,14 +289,14 @@ export function QuoteBuilder({
                   onClick={() => changeCampaignDates(start, addDays(start, d as number))}
                   className={cn(
                     "rounded-full border px-3 py-1 text-xs font-medium",
-                    end === addDays(start, d as number) ? "border-brand-600 bg-brand-600 text-white" : "border-slate-300 bg-white text-slate-700 hover:border-slate-400",
+                    end === addDays(start, d as number) ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-400",
                   )}
                 >
                   {l}
                 </button>
               ))}
             </div>
-            {start && end >= start && <p className="pb-2 text-sm text-slate-500">{daysBetween(start, end)} days</p>}
+            {start && end >= start && <p className="pb-2 text-sm text-neutral-500">{daysBetween(start, end)} days</p>}
           </div>
         </Card>
 
@@ -306,12 +306,12 @@ export function QuoteBuilder({
             title={<Step n={3}>Choose screens</Step>}
             description={checking ? "Checking availability…" : `Availability shown for ${fmtRange(start, end)}`}
           />
-          <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-5 py-3">
+          <div className="flex flex-wrap items-center gap-2 border-b border-neutral-100 px-5 py-3">
             <div className="relative min-w-48 flex-1">
-              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400" />
               <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name or area" className="pl-9" />
             </div>
-            <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
+            <div className="flex gap-1 rounded-full bg-neutral-100 p-1">
               {(
                 [
                   ["", "All"],
@@ -323,60 +323,63 @@ export function QuoteBuilder({
                   key={k}
                   type="button"
                   onClick={() => setTypeFilter(k)}
-                  className={cn("rounded-md px-3 py-1 text-sm font-medium", typeFilter === k ? "bg-white shadow-sm" : "text-slate-600")}
+                  className={cn("rounded-full px-3.5 py-1 text-[13px] font-medium transition-colors", typeFilter === k ? "bg-white shadow-sm" : "text-neutral-600")}
                 >
                   {l}
                 </button>
               ))}
             </div>
           </div>
-          <ul className="scrollbar-thin max-h-[420px] divide-y divide-slate-100 overflow-y-auto">
+          <ul className="scrollbar-thin max-h-[420px] divide-y divide-neutral-100 overflow-y-auto">
             {filtered.map((a) => {
               const c = pickerChecks[`p${a.id}`];
               const cap = capOf(a);
               const minNeed = a.type === "hoarding" || a.saleMode === "exclusive" ? cap : 1;
-              let badge: React.ReactNode = <Badge tone="gray">…</Badge>;
+              let status: { text: string; state: "on" | "pending" | "off" | "problem" } = { text: "Checking", state: "off" };
               let disabled = false;
               if (a.maintenance) {
-                badge = <Badge tone="gray">Under maintenance</Badge>;
+                status = { text: "Under maintenance", state: "problem" };
                 disabled = true;
               } else if (c) {
                 if (c.freeMin < minNeed) {
-                  badge = <Badge tone="red">Booked{c.bookedBy ? ` · ${c.bookedBy}` : ""}</Badge>;
+                  status = { text: c.bookedBy ? `Booked by ${c.bookedBy}` : "Booked", state: "off" };
                   disabled = true;
-                } else if (cap > 1 && c.freeMin < cap) badge = <Badge tone="blue">{c.freeMin} of {cap} slots free</Badge>;
-                else if (c.freeMinWithHolds < c.freeMin) badge = <Badge tone="amber">On hold{c.heldBy ? ` for ${c.heldBy}` : ""}</Badge>;
-                else badge = <Badge tone="green">Free</Badge>;
+                } else if (cap > 1 && c.freeMin < cap) status = { text: `${c.freeMin} of ${cap} slots free`, state: "pending" };
+                else if (c.freeMinWithHolds < c.freeMin) status = { text: `On hold for ${c.heldBy ?? "another client"}`, state: "pending" };
+                else status = { text: "Free", state: "on" };
               }
               const isAdded = added.has(a.id);
               return (
-                <li key={a.id} className={cn("flex items-center gap-3 px-5 py-2.5", disabled && !isAdded && "opacity-60")}>
+                <li key={a.id} className={cn("flex items-center gap-4 px-6 py-3", disabled && !isAdded && "opacity-50")}>
                   {a.photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={a.photo} alt="" className="h-10 w-16 shrink-0 rounded object-cover" />
+                    <img src={a.photo} alt="" className="h-11 w-[4.5rem] shrink-0 rounded-lg object-cover" />
                   ) : (
-                    <span className="h-10 w-16 shrink-0 rounded bg-slate-100" />
+                    <span className="h-11 w-[4.5rem] shrink-0 rounded-lg bg-neutral-100" />
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-slate-900">{a.name}</p>
-                    <p className="truncate text-xs text-slate-500">
-                      {a.type === "led" ? `LED · ${a.saleMode === "exclusive" ? "whole screen" : `${cap} slots`}` : "Hoarding"} · {a.area} ·{" "}
-                      {a.type === "led" && a.saleMode !== "exclusive" ? `₹${num(a.slotRate)}/slot` : `₹${num(a.monthlyRate)}`}/month
+                    <p className="truncate text-sm font-medium text-neutral-900">{a.name}</p>
+                    <p className="mt-0.5 flex items-center gap-2 truncate text-[13px] text-neutral-500">
+                      <StatusDot state={status.state} />
+                      <span className="truncate">{status.text}</span>
                     </p>
                   </div>
-                  <div className="hidden sm:block">{badge}</div>
+                  <p className="hidden shrink-0 text-right text-[13px] leading-tight text-neutral-900 sm:block">
+                    {a.type === "led" && a.saleMode !== "exclusive" ? `₹${num(a.slotRate)}` : `₹${num(a.monthlyRate)}`}
+                    <span className="block text-neutral-500">{a.type === "led" && a.saleMode !== "exclusive" ? "per slot, month" : "per month"}</span>
+                  </p>
                   {isAdded ? (
-                    <span className="inline-flex h-8 items-center gap-1 rounded-lg bg-emerald-50 px-3 text-sm font-medium text-emerald-700">
-                      <Check className="size-4" /> Added
+                    <span className="inline-flex h-8 w-20 items-center justify-center gap-1 rounded-full bg-neutral-100 text-[13px] font-medium text-neutral-900">
+                      <Check className="size-3.5 stroke-[2]" /> Added
                     </span>
                   ) : (
                     <button
                       type="button"
                       disabled={disabled}
                       onClick={() => setLines((xs) => [...xs, makeLine(a, start, end)])}
-                      className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-800 hover:border-brand-400 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      className={buttonClass("secondary", "sm", "w-20")}
                     >
-                      <Plus className="size-4" /> Add
+                      <Plus /> Add
                     </button>
                   )}
                 </li>
@@ -392,7 +395,7 @@ export function QuoteBuilder({
             description={media.length ? `${media.length} screen${media.length > 1 ? "s" : ""} in this quote` : "Add screens from the list above"}
           />
           <div className="space-y-3 p-4">
-            {media.length === 0 && <p className="py-6 text-center text-sm text-slate-500">No screens yet.</p>}
+            {media.length === 0 && <p className="py-6 text-center text-sm text-neutral-500">No screens yet.</p>}
             {priced.map(({ line, p }) => {
               if (line.kind !== "media") return null;
               const a = byId.get(line.assetId)!;
@@ -403,18 +406,18 @@ export function QuoteBuilder({
               const canWhole = a.type === "hoarding" || a.saleMode !== "slots";
               const tooShort = (p.days ?? 0) < a.minDays;
               return (
-                <div key={line.key} className="rounded-xl border border-slate-200 p-4">
+                <div key={line.key} className="rounded-2xl bg-neutral-50 p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="font-medium text-slate-900">{a.name}</p>
-                      <p className="text-xs text-slate-500">
-                        {a.code} · {a.area}
+                      <p className="font-medium text-neutral-900">{a.name}</p>
+                      <p className="text-xs text-neutral-500">
+                        {a.code}, {a.area}
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setLines((xs) => xs.filter((x) => x.key !== line.key))}
-                      className="rounded-md p-1 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                      className="rounded-full p-1.5 text-neutral-400 transition-colors hover:bg-neutral-200 hover:text-neutral-900"
                       aria-label="Remove"
                     >
                       <X className="size-4" />
@@ -422,26 +425,26 @@ export function QuoteBuilder({
                   </div>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <label className="block">
-                      <span className="mb-1 block text-xs font-medium text-slate-600">From</span>
+                      <span className="mb-1 block text-xs font-medium text-neutral-600">From</span>
                       <Input type="date" value={line.startDate} onChange={(e) => update(line.key, { startDate: e.target.value })} />
                     </label>
                     <label className="block">
-                      <span className="mb-1 block text-xs font-medium text-slate-600">To ({p.days} days)</span>
+                      <span className="mb-1 block text-xs font-medium text-neutral-600">To ({p.days} days)</span>
                       <Input type="date" value={line.endDate} min={line.startDate} onChange={(e) => update(line.key, { endDate: e.target.value })} />
                     </label>
                     <div className="sm:col-span-2">
-                      <span className="mb-1 block text-xs font-medium text-slate-600">Booking</span>
+                      <span className="mb-1 block text-xs font-medium text-neutral-600">Booking</span>
                       <div className="flex flex-wrap items-center gap-2">
                         {canSlots && canWhole && (
-                          <div className="inline-flex rounded-lg border border-slate-300 bg-slate-50 p-0.5">
+                          <div className="inline-flex rounded-full bg-neutral-200/70 p-1">
                             {(["slots", "exclusive"] as const).map((m) => (
                               <button
                                 key={m}
                                 type="button"
                                 onClick={() => setMode(line, m)}
                                 className={cn(
-                                  "rounded-md px-3 py-1.5 text-sm font-medium",
-                                  line.mode === m ? "bg-white text-slate-900 shadow-sm" : "text-slate-600",
+                                  "rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors",
+                                  line.mode === m ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-600",
                                 )}
                               >
                                 {m === "slots" ? "Slots" : "Whole screen"}
@@ -454,7 +457,7 @@ export function QuoteBuilder({
                             <button
                               type="button"
                               onClick={() => update(line.key, { slots: Math.max(1, line.slots - 1) })}
-                              className="rounded-md border border-slate-300 p-1.5 hover:bg-slate-50"
+                              className="rounded-full bg-white p-1.5 ring-1 ring-neutral-200 ring-inset transition-colors hover:ring-neutral-400"
                               aria-label="Fewer slots"
                             >
                               <Minus className="size-3.5" />
@@ -465,23 +468,23 @@ export function QuoteBuilder({
                             <button
                               type="button"
                               onClick={() => update(line.key, { slots: Math.min(cap, line.slots + 1) })}
-                              className="rounded-md border border-slate-300 p-1.5 hover:bg-slate-50"
+                              className="rounded-full bg-white p-1.5 ring-1 ring-neutral-200 ring-inset transition-colors hover:ring-neutral-400"
                               aria-label="More slots"
                             >
                               <Plus className="size-3.5" />
                             </button>
                           </div>
                         ) : (
-                          <span className="text-sm text-slate-600">{a.type === "hoarding" ? "Whole hoarding" : "Whole screen — every slot in the loop"}</span>
+                          <span className="text-sm text-neutral-600">{a.type === "hoarding" ? "Whole hoarding" : "Whole screen — every slot in the loop"}</span>
                         )}
                       </div>
                     </div>
                     <label className="block">
-                      <span className="mb-1 block text-xs font-medium text-slate-600">Rate / month{line.mode === "slots" ? " per slot" : ""} (₹)</span>
+                      <span className="mb-1 block text-xs font-medium text-neutral-600">Rate / month{line.mode === "slots" ? " per slot" : ""} (₹)</span>
                       <Input type="number" min="0" value={line.rate} onChange={(e) => update(line.key, { rate: Number(e.target.value) })} />
                     </label>
                     <label className="block">
-                      <span className="mb-1 block text-xs font-medium text-slate-600">Discount %</span>
+                      <span className="mb-1 block text-xs font-medium text-neutral-600">Discount %</span>
                       <Input
                         type="number"
                         min="0"
@@ -489,20 +492,20 @@ export function QuoteBuilder({
                         step="0.5"
                         value={line.discountPct}
                         onChange={(e) => update(line.key, { discountPct: Number(e.target.value) })}
-                        className={cn(line.discountPct > discountLimit && "border-amber-400 bg-amber-50")}
+                        className={cn(line.discountPct > discountLimit && "border-neutral-900 bg-neutral-100")}
                       />
                     </label>
                     <div className="flex flex-col justify-end sm:col-span-2 sm:items-end">
-                      <span className="text-xs text-slate-500">
-                        {line.mode === "slots" && a.slotSeconds ? `${line.slots * a.slotSeconds}s in every ${cap * a.slotSeconds}s · ` : ""}
+                      <span className="text-xs text-neutral-500">
+                        {line.mode === "slots" && a.slotSeconds ? `${line.slots * a.slotSeconds}s in every ${cap * a.slotSeconds}s, ` : ""}
                         {p.gross !== p.amount && <span className="line-through">{inr(p.gross)}</span>}
                       </span>
-                      <span className="text-lg font-semibold text-slate-900 tabular-nums">{inr(p.amount)}</span>
+                      <span className="text-lg font-semibold text-neutral-900 tabular-nums">{inr(p.amount)}</span>
                     </div>
                   </div>
                   <div className="mt-2 text-xs">
                     {!c ? (
-                      <span className="text-slate-400">Checking availability…</span>
+                      <span className="text-neutral-400">Checking availability…</span>
                     ) : c.freeMin < need ? (
                       <span className="inline-flex items-center gap-1 font-medium text-red-600">
                         <AlertTriangle className="size-3.5" />
@@ -510,15 +513,15 @@ export function QuoteBuilder({
                         {c.bookedBy ? ` (booked by ${c.bookedBy})` : ""}. Change dates or slots.
                       </span>
                     ) : c.freeMinWithHolds < need ? (
-                      <span className="inline-flex items-center gap-1 font-medium text-amber-700">
+                      <span className="inline-flex items-center gap-1 font-medium text-neutral-900">
                         <AlertTriangle className="size-3.5" /> On hold for {c.heldBy ?? "another client"} — they get first refusal.
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-emerald-700">
+                      <span className="inline-flex items-center gap-1 text-neutral-900">
                         <Check className="size-3.5" /> Available
                       </span>
                     )}
-                    {tooShort && <span className="ml-3 text-amber-700">Minimum booking for this screen is {a.minDays} days.</span>}
+                    {tooShort && <span className="ml-3 text-neutral-900">Minimum booking for this screen is {a.minDays} days.</span>}
                   </div>
                 </div>
               );
@@ -529,24 +532,24 @@ export function QuoteBuilder({
               .map(({ line, p }) => {
                 const l = line as ProdLine;
                 return (
-                  <div key={l.key} className="grid items-end gap-3 rounded-xl border border-dashed border-slate-300 p-3 sm:grid-cols-[1fr_90px_120px_110px_auto]">
+                  <div key={l.key} className="grid items-end gap-3 rounded-2xl bg-neutral-50 p-4 sm:grid-cols-[1fr_90px_120px_110px_auto]">
                     <label className="block">
-                      <span className="mb-1 block text-xs font-medium text-slate-600">Extra charge</span>
+                      <span className="mb-1 block text-xs font-medium text-neutral-600">Extra charge</span>
                       <Input value={l.description} onChange={(e) => update(l.key, { description: e.target.value })} placeholder="Description" />
                     </label>
                     <label className="block">
-                      <span className="mb-1 block text-xs font-medium text-slate-600">Qty</span>
+                      <span className="mb-1 block text-xs font-medium text-neutral-600">Qty</span>
                       <Input type="number" min="0" value={l.qty} onChange={(e) => update(l.key, { qty: Number(e.target.value) })} />
                     </label>
                     <label className="block">
-                      <span className="mb-1 block text-xs font-medium text-slate-600">Rate (₹)</span>
+                      <span className="mb-1 block text-xs font-medium text-neutral-600">Rate (₹)</span>
                       <Input type="number" min="0" value={l.rate} onChange={(e) => update(l.key, { rate: Number(e.target.value) })} />
                     </label>
                     <p className="pb-2 text-right font-semibold tabular-nums">{inr(p.amount)}</p>
                     <button
                       type="button"
                       onClick={() => setLines((xs) => xs.filter((x) => x.key !== l.key))}
-                      className="mb-1.5 rounded-md p-1 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                      className="mb-1.5 rounded-full p-1.5 text-neutral-400 transition-colors hover:bg-neutral-200 hover:text-neutral-900"
                       aria-label="Remove"
                     >
                       <X className="size-4" />
@@ -556,7 +559,7 @@ export function QuoteBuilder({
               })}
 
             <div className="flex flex-wrap items-center gap-2 pt-1">
-              <span className="text-xs font-medium text-slate-500">Add extra:</span>
+              <span className="text-xs font-medium text-neutral-500">Add extra:</span>
               {(
                 [
                   ["print", "Printing"],
@@ -570,7 +573,7 @@ export function QuoteBuilder({
                   key={k}
                   type="button"
                   onClick={() => addExtra(k)}
-                  className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 hover:border-slate-400"
+                  className="inline-flex items-center gap-1 rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs font-medium text-neutral-700 hover:border-neutral-400"
                 >
                   <Plus className="size-3" /> {l}
                 </button>
@@ -589,7 +592,7 @@ export function QuoteBuilder({
             {totals.discountTotal > 0 && <Row label="Discount" value={`− ${inr(totals.discountTotal)}`} tone="green" />}
             {client?.type === "agency" && (
               <div className="flex items-center justify-between gap-2">
-                <span className="flex items-center gap-1 text-slate-600">
+                <span className="flex items-center gap-1 text-neutral-600">
                   Agency commission
                   <input
                     type="number"
@@ -598,7 +601,7 @@ export function QuoteBuilder({
                     step="0.5"
                     value={commission}
                     onChange={(e) => setCommission(Number(e.target.value))}
-                    className="w-14 rounded border border-slate-300 px-1.5 py-0.5 text-right text-xs"
+                    className="w-14 rounded border border-neutral-300 px-1.5 py-0.5 text-right text-xs"
                   />
                   %
                 </span>
@@ -606,7 +609,7 @@ export function QuoteBuilder({
               </div>
             )}
             {totals.production > 0 && <Row label="Production & extras" value={inr(totals.production)} />}
-            <div className="border-t border-slate-100 pt-2">
+            <div className="border-t border-neutral-100 pt-2">
               <Row label="Taxable value" value={inr(totals.taxable)} />
             </div>
             {client?.interState ? (
@@ -617,29 +620,29 @@ export function QuoteBuilder({
                 <Row label={`SGST ${gstRate / 2}%`} value={inr(totals.sgst)} muted />
               </>
             )}
-            <div className="flex items-baseline justify-between border-t border-slate-200 pt-3">
-              <span className="font-semibold text-slate-900">Total</span>
-              <span className="text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">{inr(totals.total)}</span>
+            <div className="flex items-baseline justify-between border-t border-neutral-200 pt-3">
+              <span className="font-semibold text-neutral-900">Total</span>
+              <span className="text-2xl font-semibold tracking-tight text-neutral-900 tabular-nums">{inr(totals.total)}</span>
             </div>
             {impressions > 0 && (
-              <p className="text-xs text-slate-500">
-                ~{num(Math.round(impressions))} estimated impressions · CPM ₹{cpm.toFixed(0)}
+              <p className="text-xs text-neutral-500">
+                ~{num(Math.round(impressions))} estimated impressions, CPM ₹{cpm.toFixed(0)}
               </p>
             )}
           </div>
 
           {totals.maxDiscountPct > discountLimit && (
-            <div className="mx-5 mb-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            <div className="mx-6 mb-3 rounded-xl bg-neutral-100 px-3.5 py-2.5 text-xs text-neutral-800">
               A {totals.maxDiscountPct}% discount is above your {discountLimit}% limit. Saving will send this quote for approval before it can go to the client.
             </div>
           )}
           {problems > 0 && (
-            <div className="mx-5 mb-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-800">
+            <div className="mx-6 mb-3 rounded-xl bg-red-50 px-3.5 py-2.5 text-xs text-red-700">
               {problems} screen{problems > 1 ? "s are" : " is"} not available for the chosen dates. You can save, but it can&apos;t be booked until that&apos;s fixed.
             </div>
           )}
 
-          <div className="space-y-3 border-t border-slate-100 px-5 py-4">
+          <div className="space-y-3 border-t border-neutral-100 px-5 py-4">
             <Field label="Valid until">
               <Input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
             </Field>
@@ -647,7 +650,7 @@ export function QuoteBuilder({
               <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
             </Field>
             <details>
-              <summary className="cursor-pointer text-sm font-medium text-slate-600 select-none">Terms & conditions</summary>
+              <summary className="cursor-pointer text-sm font-medium text-neutral-600 select-none">Terms & conditions</summary>
               <Textarea rows={6} value={terms} onChange={(e) => setTerms(e.target.value)} className="mt-2 text-xs" />
             </details>
             <ActionForm action={saveAction} submitLabel={initial.quoteId ? "Save changes" : "Save quote"} resetOnSuccess={false} className="pt-1">
@@ -663,7 +666,7 @@ export function QuoteBuilder({
 function Step({ n, children }: { n: number; children: React.ReactNode }) {
   return (
     <span className="flex items-center gap-2">
-      <span className="flex size-6 items-center justify-center rounded-full bg-brand-700 text-xs font-semibold text-white">{n}</span>
+      <span className="flex size-6 items-center justify-center rounded-full bg-neutral-900 text-xs font-medium text-white">{n}</span>
       {children}
     </span>
   );
@@ -672,8 +675,8 @@ function Step({ n, children }: { n: number; children: React.ReactNode }) {
 function Row({ label, value, tone, muted }: { label: string; value: string; tone?: "green"; muted?: boolean }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className={cn("text-slate-600", muted && "text-slate-500")}>{label}</span>
-      <span className={cn("tabular-nums", tone === "green" && "text-emerald-700", muted && "text-slate-500")}>{value}</span>
+      <span className={cn("text-neutral-600", muted && "text-neutral-500")}>{label}</span>
+      <span className={cn("tabular-nums", tone === "green" && "text-neutral-900", muted && "text-neutral-500")}>{value}</span>
     </div>
   );
 }

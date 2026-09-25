@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
-import { Clock, IndianRupee } from "lucide-react";
 import type { ActionResult } from "./forms";
 import { toast } from "./forms";
 import { Avatar, cn } from "./ui";
@@ -59,8 +58,8 @@ export function Kanban({
   }
 
   return (
-    <div className="scrollbar-thin -mx-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-      <div className="flex min-w-max gap-3">
+    <div className="scrollbar-thin -mx-5 overflow-x-auto px-5 pb-4 sm:-mx-8 sm:px-8 lg:-mx-12 lg:px-12">
+      <div className="flex min-w-max gap-4">
         {columns.map((col) => {
           const list = items.filter((c) => c.stage === col.key);
           return (
@@ -72,17 +71,13 @@ export function Kanban({
               }}
               onDragLeave={() => setOver((o) => (o === col.key ? null : o))}
               onDrop={() => drop(col.key)}
-              className={cn(
-                "flex w-72 shrink-0 flex-col rounded-xl border bg-slate-100/70 transition-colors",
-                over === col.key ? "border-brand-400 bg-brand-50" : "border-transparent",
-              )}
+              className={cn("flex w-[17rem] shrink-0 flex-col rounded-2xl transition-colors", over === col.key ? "bg-neutral-200/60" : "bg-neutral-100")}
             >
-              <div className="flex items-center gap-2 px-3 pt-3 pb-2">
-                <span className={cn("size-2 rounded-full", col.dot)} />
-                <span className="text-sm font-semibold text-slate-800">{col.label}</span>
-                <span className="rounded-full bg-white px-1.5 text-xs text-slate-500 tabular-nums">{list.length}</span>
+              <div className="flex items-baseline justify-between px-4 pt-4 pb-3">
+                <span className="text-sm font-medium text-neutral-900">{col.label}</span>
+                <span className="text-[13px] text-neutral-400 tabular-nums">{list.length}</span>
               </div>
-              <div className="flex min-h-24 flex-1 flex-col gap-2 px-2 pb-3">
+              <div className="flex min-h-24 flex-1 flex-col gap-2 px-2 pb-2">
                 {list.map((c) => (
                   <Link
                     key={c.id}
@@ -91,32 +86,22 @@ export function Kanban({
                     onDragStart={() => setDragId(c.id)}
                     onDragEnd={() => setDragId(null)}
                     className={cn(
-                      "block cursor-grab rounded-lg border border-slate-200 bg-white p-3 shadow-xs transition hover:border-brand-300 hover:shadow-sm active:cursor-grabbing",
-                      dragId === c.id && "opacity-50",
+                      "block cursor-grab rounded-xl bg-white p-3.5 ring-1 ring-black/[0.04] transition-shadow hover:shadow-[0_2px_12px_rgba(0,0,0,0.06)] active:cursor-grabbing",
+                      dragId === c.id && "opacity-40",
                     )}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm leading-snug font-medium text-slate-900">{c.name}</p>
-                      {c.ownerName ? <Avatar name={c.ownerName} size="sm" /> : <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">Unassigned</span>}
+                      <p className="text-sm leading-snug font-medium text-neutral-900">{c.name}</p>
+                      {c.ownerName ? <Avatar name={c.ownerName} size="sm" /> : <span className="text-[11px] text-neutral-500">Unassigned</span>}
                     </div>
-                    {c.requirement && <p className="mt-1 line-clamp-2 text-xs text-slate-500">{c.requirement}</p>}
-                    <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
-                      {c.budget && (
-                        <span className="inline-flex items-center gap-0.5 font-medium text-slate-700">
-                          <IndianRupee className="size-3" />
-                          {c.budget.replace("₹", "")}
-                        </span>
-                      )}
-                      <span className={cn(c.stale && "font-medium text-amber-700")}>{c.lastContact}</span>
+                    {c.requirement && <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-neutral-500">{c.requirement}</p>}
+                    <div className="mt-3 flex items-center justify-between gap-2 text-xs text-neutral-500">
+                      <span className={cn(c.nextOverdue && "text-red-600")}>{c.nextTask ? `Next: ${c.nextTask}` : c.lastContact}</span>
+                      {c.budget && <span className="font-medium text-neutral-900">{c.budget}</span>}
                     </div>
-                    {c.nextTask && (
-                      <p className={cn("mt-1.5 inline-flex items-center gap-1 text-[11px]", c.nextOverdue ? "font-medium text-red-600" : "text-slate-500")}>
-                        <Clock className="size-3" /> {c.nextTask}
-                      </p>
-                    )}
                   </Link>
                 ))}
-                {list.length === 0 && <p className="px-2 py-6 text-center text-xs text-slate-400">Drag leads here</p>}
+                {list.length === 0 && <p className="px-2 py-8 text-center text-xs text-neutral-400">Drag a lead here</p>}
               </div>
             </div>
           );

@@ -59,18 +59,18 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const Section = ({ title, children, n }: { title: string; children: React.ReactNode; n: number }) =>
     n > 0 ? (
       <Card>
-        <p className="border-b border-slate-100 px-5 py-3 text-xs font-semibold tracking-wide text-slate-500 uppercase">
-          {title} · {n}
+        <p className="border-b border-neutral-100 px-5 py-3 text-[13px] font-medium text-neutral-500">
+          {title} <span className="ml-1 text-neutral-400">{n}</span>
         </p>
-        <ul className="divide-y divide-slate-100">{children}</ul>
+        <ul className="divide-y divide-neutral-100">{children}</ul>
       </Card>
     ) : null;
   const Item = ({ href, title, sub, badge }: { href: string; title: string; sub?: string; badge?: React.ReactNode }) => (
     <li>
-      <Link href={href} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-slate-50">
+      <Link href={href} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-neutral-50">
         <span>
-          <span className="block font-medium text-slate-900">{title}</span>
-          {sub && <span className="text-xs text-slate-500">{sub}</span>}
+          <span className="block font-medium text-neutral-900">{title}</span>
+          {sub && <span className="text-xs text-neutral-500">{sub}</span>}
         </span>
         {badge}
       </Link>
@@ -87,17 +87,17 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       )}
       <Section title="Clients & leads" n={cl.length}>
         {cl.map((c) => (
-          <Item key={c.id} href={`/clients/${c.id}`} title={c.name} sub={[c.industry, c.city, c.gstin].filter(Boolean).join(" · ")} badge={<Badge tone={stageInfo(c.stage).tone}>{stageInfo(c.stage).label}</Badge>} />
+          <Item key={c.id} href={`/clients/${c.id}`} title={c.name} sub={[c.industry, c.city, c.gstin].filter(Boolean).join(", ")} badge={<Badge tone={stageInfo(c.stage).tone}>{stageInfo(c.stage).label}</Badge>} />
         ))}
       </Section>
       <Section title="Contacts" n={ct.length}>
         {ct.map(({ p, c }) => (
-          <Item key={p.id} href={`/clients/${c.id}`} title={p.name} sub={`${c.name} · ${[p.phone, p.email].filter(Boolean).join(" · ")}`} />
+          <Item key={p.id} href={`/clients/${c.id}`} title={p.name} sub={`${c.name}, ${[p.phone, p.email].filter(Boolean).join(", ")}`} />
         ))}
       </Section>
       <Section title="Screens" n={sc.length}>
         {sc.map((a) => (
-          <Item key={a.id} href={`/screens/${a.id}`} title={a.name} sub={`${a.code} · ${a.area}, ${a.city}`} />
+          <Item key={a.id} href={`/screens/${a.id}`} title={a.name} sub={`${a.code}, ${a.area}, ${a.city}`} />
         ))}
       </Section>
       <Section title="Quotes" n={qt.length}>
@@ -107,12 +107,12 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       </Section>
       <Section title="Bookings" n={bk.length}>
         {bk.map(({ b, c }) => (
-          <Item key={b.id} href={`/bookings/${b.id}`} title={`${b.number} — ${b.title}`} sub={`${c} · ${fmtRange(b.startDate, b.endDate)}`} badge={<Badge tone={BOOKING_STATUS[b.status].tone}>{BOOKING_STATUS[b.status].label}</Badge>} />
+          <Item key={b.id} href={`/bookings/${b.id}`} title={`${b.number} — ${b.title}`} sub={`${c}, ${fmtRange(b.startDate, b.endDate)}`} badge={<Badge tone={BOOKING_STATUS[b.status].tone}>{BOOKING_STATUS[b.status].label}</Badge>} />
         ))}
       </Section>
       <Section title="Invoices" n={iv.length}>
         {iv.map(({ i, c }) => (
-          <Item key={i.id} href={`/invoices/${i.id}`} title={i.number ?? "Draft invoice"} sub={`${c} · ${inr(i.total)}`} badge={<Badge tone={INVOICE_STATUS[i.status].tone}>{INVOICE_STATUS[i.status].label}</Badge>} />
+          <Item key={i.id} href={`/invoices/${i.id}`} title={i.number ?? "Draft invoice"} sub={`${c}, ${inr(i.total)}`} badge={<Badge tone={INVOICE_STATUS[i.status].tone}>{INVOICE_STATUS[i.status].label}</Badge>} />
         ))}
       </Section>
     </div>

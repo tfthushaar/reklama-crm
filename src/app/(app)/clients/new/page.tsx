@@ -36,8 +36,8 @@ export default async function NewClientPage() {
               </Select>
             </Field>
           )}
-          <label className="flex items-center gap-2 text-sm text-slate-600">
-            <input type="checkbox" name="force" className="size-4 rounded border-slate-300" />
+          <label className="flex items-center gap-2 text-sm text-neutral-600">
+            <input type="checkbox" name="force" className="size-4 rounded border-neutral-300" />
             Create anyway, even if it looks like a duplicate
           </label>
         </ActionForm>

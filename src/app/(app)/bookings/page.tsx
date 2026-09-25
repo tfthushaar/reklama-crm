@@ -7,7 +7,7 @@ import { requireUser } from "@/lib/auth";
 import { BOOKING_STATUS } from "@/lib/constants";
 import { daysBetween, fmtRange, inr, today } from "@/lib/format";
 import { paidSq } from "@/lib/queries";
-import { Badge, Card, EmptyState, PageHeader, Tabs, cn, table } from "@/components/ui";
+import { Badge, Card, EmptyState, PageHeader, Tabs, cn, table, StatusLabel } from "@/components/ui";
 
 export const metadata = { title: "Bookings" };
 
@@ -92,21 +92,21 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
                   return (
                     <tr key={b.id} className={table.tr}>
                       <td className={table.td}>
-                        <Link href={`/bookings/${b.id}`} className="font-medium text-slate-900 hover:text-brand-700 hover:underline">
+                        <Link href={`/bookings/${b.id}`} className="font-medium text-neutral-900 hover:text-brand-700 hover:underline">
                           {b.title}
                         </Link>
-                        <p className="text-xs text-slate-500">
-                          {client} · {b.number}
+                        <p className="text-xs text-neutral-500">
+                          {client}, {b.number}
                         </p>
                       </td>
-                      <td className={cn(table.td, "max-w-56 text-slate-600")}>
+                      <td className={cn(table.td, "max-w-56 text-neutral-600")}>
                         <p className="truncate" title={screens.join(", ")}>
                           {screens.join(", ")}
                         </p>
                       </td>
                       <td className={cn(table.td, "whitespace-nowrap")}>
                         {fmtRange(b.startDate, b.endDate)}
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-neutral-500">
                           {b.status === "cancelled"
                             ? ""
                             : startsIn !== null
@@ -121,18 +121,18 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
                         </p>
                       </td>
                       <td className={table.td}>
-                        <Badge tone={BOOKING_STATUS[b.status].tone}>{BOOKING_STATUS[b.status].label}</Badge>
+                        <StatusLabel tone={BOOKING_STATUS[b.status].tone} label={BOOKING_STATUS[b.status].label} />
                       </td>
                       <td className={table.td}>
                         {b.status === "cancelled" ? (
                           "—"
                         ) : billedN === 0 ? (
-                          <span className="text-xs font-medium text-amber-700">Not billed</span>
+                          <span className="text-xs font-medium text-neutral-900">Not billed</span>
                         ) : paidN >= billedN - 100 ? (
-                          <span className="text-xs font-medium text-emerald-700">Paid</span>
+                          <span className="text-xs font-medium text-neutral-900">Paid</span>
                         ) : (
-                          <span className="text-xs text-slate-600">
-                            {inr(billedN - paidN)} <span className="text-slate-400">due</span>
+                          <span className="text-xs text-neutral-600">
+                            {inr(billedN - paidN)} <span className="text-neutral-400">due</span>
                           </span>
                         )}
                       </td>

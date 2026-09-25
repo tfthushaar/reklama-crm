@@ -13,15 +13,6 @@ import { setStageAction } from "@/app/actions/clients";
 
 export const metadata = { title: "Leads" };
 
-const DOTS: Record<string, string> = {
-  new: "bg-slate-400",
-  contacted: "bg-blue-500",
-  qualified: "bg-teal-500",
-  meeting: "bg-violet-500",
-  proposal: "bg-amber-500",
-  negotiation: "bg-orange-500",
-};
-
 export default async function LeadsPage({ searchParams }: { searchParams: Promise<{ owner?: string; q?: string }> }) {
   const user = await requireUser();
   const sp = await searchParams;
@@ -76,7 +67,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     ...(can(user, "team") ? [{ key: "none", label: "Unassigned" }, ...team.filter((u) => u.id !== user.id).map((u) => ({ key: String(u.id), label: u.name.split(" ")[0]! }))] : []),
   ];
 
-  const columns = STAGES.filter((s) => OPEN_STAGES.includes(s.key)).map((s) => ({ key: s.key, label: s.label, dot: DOTS[s.key]! }));
+  const columns = STAGES.filter((s) => OPEN_STAGES.includes(s.key)).map((s) => ({ key: s.key, label: s.label, dot: "" }));
 
   return (
     <div>
@@ -93,14 +84,14 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
         }
       />
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="flex flex-wrap gap-1 rounded-lg bg-slate-100 p-1">
+        <div className="flex flex-wrap gap-1 rounded-full bg-neutral-100 p-1">
           {filters.map((f) => (
             <Link
               key={f.key}
               href={`/leads?owner=${f.key}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
               className={cn(
-                "rounded-md px-3 py-1.5 text-sm font-medium",
-                owner === f.key ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900",
+                "rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors",
+                owner === f.key ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-600 hover:text-neutral-900",
               )}
             >
               {f.label}
@@ -113,11 +104,11 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
             name="q"
             defaultValue={q}
             placeholder="Filter leads…"
-            className="h-9 w-56 rounded-lg border border-slate-300 bg-white px-3 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none"
+            className="h-9 w-56 rounded-full border border-neutral-200 bg-white px-4 text-sm outline-none placeholder:text-neutral-400 focus:border-neutral-900 focus:ring-4 focus:ring-neutral-900/5"
           />
         </form>
-        <Link href="/clients?tab=won" className="text-sm text-slate-500 hover:text-slate-800">
-          Won & lost →
+        <Link href="/clients?tab=won" className="text-sm text-neutral-500 hover:text-neutral-800">
+          Won and lost
         </Link>
       </div>
       <Kanban columns={columns} cards={cards} moveAction={setStageAction} />

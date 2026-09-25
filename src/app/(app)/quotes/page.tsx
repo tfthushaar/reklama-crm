@@ -7,7 +7,7 @@ import { requireUser } from "@/lib/auth";
 import { QUOTE_STATUS } from "@/lib/constants";
 import { dayOf, fmtDay, fmtRange, inr, relTime } from "@/lib/format";
 import { can } from "@/lib/permissions";
-import { Badge, Card, EmptyState, LinkButton, PageHeader, Tabs, cn, table } from "@/components/ui";
+import { Badge, Card, EmptyState, LinkButton, PageHeader, Tabs, cn, table, StatusLabel } from "@/components/ui";
 
 export const metadata = { title: "Quotes" };
 
@@ -72,11 +72,11 @@ export default async function QuotesPage({ searchParams }: { searchParams: Promi
       />
       <Tabs items={TABS.map((t) => ({ label: t.label, href: href(t.key), active: tab.key === t.key, count: countFor(t.statuses) }))} />
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
-          <Link href={href(tab.key, false)} className={cn("rounded-md px-3 py-1.5 text-sm font-medium", !mine ? "bg-white shadow-sm" : "text-slate-600")}>
+        <div className="flex gap-1 rounded-full bg-neutral-100 p-1">
+          <Link href={href(tab.key, false)} className={cn("rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors", !mine ? "bg-white shadow-sm" : "text-neutral-600")}>
             Everyone&apos;s
           </Link>
-          <Link href={href(tab.key, true)} className={cn("rounded-md px-3 py-1.5 text-sm font-medium", mine ? "bg-white shadow-sm" : "text-slate-600")}>
+          <Link href={href(tab.key, true)} className={cn("rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors", mine ? "bg-white shadow-sm" : "text-neutral-600")}>
             Mine
           </Link>
         </div>
@@ -87,7 +87,7 @@ export default async function QuotesPage({ searchParams }: { searchParams: Promi
             name="q"
             defaultValue={sp.q}
             placeholder="Search quotes…"
-            className="h-9 w-56 rounded-lg border border-slate-300 bg-white px-3 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none"
+            className="h-9 w-56 rounded-full border border-neutral-200 bg-white px-4 text-sm outline-none placeholder:text-neutral-400 focus:border-neutral-900 focus:ring-4 focus:ring-neutral-900/5"
           />
         </form>
       </div>
@@ -111,28 +111,28 @@ export default async function QuotesPage({ searchParams }: { searchParams: Promi
                 {rows.map(({ q, v, client, by, start, end, screens }) => (
                   <tr key={q.id} className={table.tr}>
                     <td className={table.td}>
-                      <Link href={`/quotes/${q.id}`} className="font-medium text-slate-900 hover:text-brand-700 hover:underline">
+                      <Link href={`/quotes/${q.id}`} className="font-medium text-neutral-900 hover:text-brand-700 hover:underline">
                         {q.title}
                       </Link>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-neutral-500">
                         {q.number}
-                        {q.currentVersion > 1 ? ` · v${q.currentVersion}` : ""} · {screens} screen{screens === 1 ? "" : "s"}
+                        {q.currentVersion > 1 ? `, v${q.currentVersion}` : ""}, {screens} screen{screens === 1 ? "" : "s"}
                       </p>
                     </td>
-                    <td className={cn(table.td, "text-slate-700")}>
+                    <td className={cn(table.td, "text-neutral-700")}>
                       <Link href={`/clients/${q.clientId}`} className="hover:underline">
                         {client}
                       </Link>
                     </td>
-                    <td className={cn(table.td, "whitespace-nowrap text-slate-600")}>{fmtRange(start, end)}</td>
+                    <td className={cn(table.td, "whitespace-nowrap text-neutral-600")}>{fmtRange(start, end)}</td>
                     <td className={table.td}>
-                      <Badge tone={QUOTE_STATUS[q.status].tone}>{QUOTE_STATUS[q.status].label}</Badge>
-                      <p className="mt-0.5 text-xs text-slate-500">
+                      <StatusLabel tone={QUOTE_STATUS[q.status].tone} label={QUOTE_STATUS[q.status].label} />
+                      <p className="mt-0.5 text-xs text-neutral-500">
                         {q.status === "sent" ? `sent ${relTime(q.sentAt)}` : q.status === "draft" ? `created ${fmtDay(dayOf(q.createdAt), { year: false })}` : ""}
                         {q.status === "pending_approval" ? `${v.maxDiscountPct}% discount` : ""}
                       </p>
                     </td>
-                    <td className={cn(table.td, "text-slate-600")}>{by?.split(" ")[0]}</td>
+                    <td className={cn(table.td, "text-neutral-600")}>{by?.split(" ")[0]}</td>
                     <td className={cn(table.td, "text-right font-medium tabular-nums")}>{inr(v.total)}</td>
                   </tr>
                 ))}

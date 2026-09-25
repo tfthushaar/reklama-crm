@@ -1,53 +1,32 @@
-import { Check } from "lucide-react";
 import { setStageAction } from "@/app/actions/clients";
 import { LOST_REASONS, STAGES } from "@/lib/constants";
 import { ActionButton, ActionForm, Modal } from "./forms";
 import { ChipInput } from "./inputs";
 import { Field, cn } from "./ui";
 
+/** A slim progress track: filled segments for stages reached, labels underneath, click a stage to move there. */
 export function StageStepper({ clientId, stage, lostReason, canEdit }: { clientId: number; stage: string; lostReason: string | null; canEdit: boolean }) {
   const flow = STAGES.filter((s) => s.key !== "lost");
   const idx = flow.findIndex((s) => s.key === stage);
   const lost = stage === "lost";
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <ol className="flex flex-1 flex-wrap items-center gap-1">
-        {flow.map((s, i) => {
-          const done = !lost && i < idx;
-          const current = !lost && i === idx;
-          const pill = (
-            <span
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset transition-colors",
-                current && (s.key === "won" ? "bg-emerald-600 text-white ring-emerald-600" : "bg-brand-700 text-white ring-brand-700"),
-                done && "bg-brand-50 text-brand-700 ring-brand-200",
-                !current && !done && "bg-white text-slate-500 ring-slate-200",
-              )}
-            >
-              {done && <Check className="size-3" />}
-              {s.label}
-            </span>
-          );
-          return (
-            <li key={s.key} className="flex items-center gap-1">
-              {canEdit && !current ? (
-                <ActionButton action={setStageAction} fields={{ id: clientId, stage: s.key }} variant="ghost" size="sm" className="h-auto rounded-full p-0 hover:bg-transparent">
-                  {pill}
-                </ActionButton>
-              ) : (
-                pill
-              )}
-              {i < flow.length - 1 && <span className="h-px w-3 bg-slate-300" />}
-            </li>
-          );
-        })}
-      </ol>
-      {lost ? (
-        <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700 ring-1 ring-red-200">Lost · {lostReason}</span>
-      ) : (
-        canEdit && (
-          <Modal label="Mark as lost" variant="ghost" size="sm" title="Why was this lead lost?" description="This helps spot patterns in lost deals.">
+    <div>
+      <div className="mb-3 flex items-center justify-between gap-4">
+        <p className="text-[13px] text-neutral-500">
+          {lost ? (
+            <>
+              <span className="font-medium text-red-600">Lost</span>
+              {lostReason ? `: ${lostReason.toLowerCase()}` : ""}
+            </>
+          ) : (
+            <>
+              Stage <span className="ml-1 font-medium text-neutral-900">{flow[idx]?.label}</span>
+            </>
+          )}
+        </p>
+        {!lost && canEdit && (
+          <Modal label="Mark as lost" variant="ghost" size="sm" title="Why was this lead lost?" description="Knowing why helps spot patterns in lost deals.">
             <ActionForm action={setStageAction} submitLabel="Mark as lost" submitVariant="danger">
               <input type="hidden" name="id" value={clientId} />
               <input type="hidden" name="stage" value="lost" />
@@ -56,8 +35,45 @@ export function StageStepper({ clientId, stage, lostReason, canEdit }: { clientI
               </Field>
             </ActionForm>
           </Modal>
-        )
-      )}
+        )}
+      </div>
+      <ol className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${flow.length}, minmax(0, 1fr))` }}>
+        {flow.map((s, i) => {
+          const reached = !lost && i <= idx;
+          const current = !lost && i === idx;
+          const segment = (
+            <span className="block w-full text-left">
+              <span className={cn("block h-1 rounded-full transition-colors", reached ? "bg-neutral-900" : "bg-neutral-200 group-hover:bg-neutral-400")} />
+              <span
+                className={cn(
+                  "mt-2 hidden truncate text-xs sm:block",
+                  current ? "font-medium text-neutral-900" : reached ? "text-neutral-600" : "text-neutral-400 group-hover:text-neutral-700",
+                )}
+              >
+                {s.label}
+              </span>
+            </span>
+          );
+          return (
+            <li key={s.key} className="min-w-0" title={canEdit && !current ? `Move to ${s.label}` : s.label}>
+              {canEdit && !current ? (
+                <ActionButton
+                  action={setStageAction}
+                  fields={{ id: clientId, stage: s.key }}
+                  variant="ghost"
+                  size="sm"
+                  full
+                  className="group h-auto w-full justify-start rounded-none bg-transparent px-0 py-0 font-normal hover:bg-transparent"
+                >
+                  {segment}
+                </ActionButton>
+              ) : (
+                segment
+              )}
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }

@@ -116,7 +116,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
                         <span className="flex items-center gap-2">
                           <Avatar name={p.name} size="sm" />
                           <span className="font-medium">{p.name}</span>
-                          <span className="text-xs text-slate-400">{p.role}</span>
+                          <span className="text-xs text-neutral-400">{p.role}</span>
                         </span>
                       </td>
                       <td className={cn(table.td, "text-right tabular-nums")}>{p.open}</td>
@@ -129,13 +129,13 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
             </div>
           </Card>
           <Card>
-            <div className="border-b border-slate-100 px-5 py-4">
-              <h2 className="font-semibold text-slate-900">Overdue across the team</h2>
+            <div className="border-b border-neutral-100 px-5 py-4">
+              <h2 className="font-semibold text-neutral-900">Overdue across the team</h2>
             </div>
             {teamOverdue.length === 0 ? (
               <EmptyState icon={<CheckCircle2 />} title="No overdue follow-ups" />
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-neutral-100">
                 {teamOverdue.map((task) => (
                   <TaskRow key={task.id} task={task} showAssignee />
                 ))}
@@ -152,7 +152,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
               text={tab === "today" ? "Enjoy the calm — or set a reminder for a lead you haven't called in a while." : undefined}
             />
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-neutral-100">
               {list.map((task) => (
                 <TaskRow key={task.id} task={task} />
               ))}

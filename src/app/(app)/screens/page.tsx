@@ -1,15 +1,15 @@
 import Link from "next/link";
 import { and, asc, eq, like, ne, or, sql } from "drizzle-orm";
-import { CalendarSearch, MonitorPlay, Upload } from "lucide-react";
+import { MonitorPlay, Upload } from "lucide-react";
 import { getDb } from "@/db";
 import { assetPhotos, assets, maintenanceTickets } from "@/db/schema";
 import { requireUser } from "@/lib/auth";
 import { loadAvailability } from "@/lib/availability";
 import { ASSET_STATUS, ASSET_TYPE_LABEL } from "@/lib/constants";
-import { fmtDay, fmtRange, num, today } from "@/lib/format";
+import { fmtDay, fmtRange, inr, today } from "@/lib/format";
 import { can } from "@/lib/permissions";
-import { ScreensNav, priceSummary, saleSummary, sizeSummary } from "@/components/screens-nav";
-import { Badge, Card, EmptyState, Input, LinkButton, PageHeader, Select, buttonClass, cn } from "@/components/ui";
+import { ScreensNav } from "@/components/screens-nav";
+import { Card, EmptyState, Input, LinkButton, PageHeader, Select, StatusDot, buttonClass, cn } from "@/components/ui";
 
 export const metadata = { title: "Screens" };
 
@@ -59,7 +59,7 @@ export default async function ScreensPage({
       tone = "green";
     } else if (av.freeMin === 0) {
       const b = av.bookings[0];
-      label = b ? `Booked · ${b.clientName} till ${fmtDay(b.endDate, { year: false })}` : "Booked";
+      label = b ? `Booked until ${fmtDay(b.endDate, { year: false })}` : "Booked";
       tone = "red";
     } else if (av.freeMin < av.capacity) {
       label = `${av.freeMin} of ${av.capacity} slots free`;
@@ -91,99 +91,84 @@ export default async function ScreensPage({
       />
       <ScreensNav active="list" counts={{ maintenance: maint }} />
 
-      <Card className="mb-5 p-4">
-        <form className="grid gap-3 md:grid-cols-[1fr_auto_auto_auto_auto_auto] md:items-end">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Search</label>
-            <Input name="q" defaultValue={sp.q} placeholder="Name, code or area" />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Type</label>
-            <Select name="type" defaultValue={sp.type ?? ""}>
-              <option value="">All types</option>
-              <option value="led">LED screens</option>
-              <option value="hoarding">Hoardings</option>
-            </Select>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Area</label>
-            <Select name="area" defaultValue={sp.area ?? ""}>
-              <option value="">All areas</option>
-              {areas.map((a) => (
-                <option key={a}>{a}</option>
-              ))}
-            </Select>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Free from</label>
-            <Input type="date" name="from" defaultValue={sp.from ?? ""} />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">to</label>
-            <Input type="date" name="to" defaultValue={sp.to ?? ""} />
-          </div>
-          <button className={buttonClass("primary")}>
-            <CalendarSearch /> Check
-          </button>
-        </form>
-        <p className="mt-3 text-sm text-slate-500">
-          {checking ? (
-            <>
-              <b className="text-slate-800">{freeCount}</b> of {cards.length} screens have space {fmtRange(from, to)}.{" "}
-              <Link href="/screens" className="text-brand-700 hover:underline">
-                Clear dates
-              </Link>
-            </>
-          ) : (
-            <>Pick dates to see which screens are free for a campaign.</>
-          )}
+      <form className="mb-8 flex flex-wrap items-center gap-2">
+        <Input name="q" defaultValue={sp.q} placeholder="Search screens" className="h-9 w-full rounded-full sm:w-56" />
+        <Select name="type" defaultValue={sp.type ?? ""} className="h-9 w-auto rounded-full">
+          <option value="">All types</option>
+          <option value="led">LED screens</option>
+          <option value="hoarding">Hoardings</option>
+        </Select>
+        <Select name="area" defaultValue={sp.area ?? ""} className="h-9 w-auto rounded-full">
+          <option value="">All areas</option>
+          {areas.map((a) => (
+            <option key={a}>{a}</option>
+          ))}
+        </Select>
+        <span className="ml-auto flex flex-wrap items-center gap-2 text-[13px] text-neutral-500">
+          Free between
+          <Input type="date" name="from" defaultValue={sp.from ?? ""} className="h-9 w-auto rounded-full" aria-label="From" />
+          and
+          <Input type="date" name="to" defaultValue={sp.to ?? ""} className="h-9 w-auto rounded-full" aria-label="To" />
+          <button className={buttonClass("primary")}>Check</button>
+        </span>
+      </form>
+      {checking && (
+        <p className="-mt-4 mb-6 text-sm text-neutral-600">
+          {freeCount} of {cards.length} screens have space {fmtRange(from, to)}.{" "}
+          <Link href="/screens" className="text-neutral-900 underline underline-offset-2">
+            Clear dates
+          </Link>
         </p>
-      </Card>
+      )}
 
       {cards.length === 0 ? (
         <Card>
-          <EmptyState icon={<MonitorPlay />} title="No screens match" />
+          <EmptyState icon={<MonitorPlay />} title="No screens match" text="Try another area or clear the filters." />
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 xl:grid-cols-3">
           {cards.map(({ a, label, tone }) => (
             <Link key={a.id} href={`/screens/${a.id}`} className="group">
-              <Card className="h-full overflow-hidden transition hover:border-brand-300 hover:shadow-md">
-                <div className="relative aspect-[16/10] bg-slate-100">
-                  {photoOf.get(a.id) && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={photoOf.get(a.id)} alt={a.name} className="h-full w-full object-cover" loading="lazy" />
-                  )}
-                  <span className="absolute top-2 left-2">
-                    <Badge tone={a.type === "led" ? "purple" : "teal"} className="bg-white/95">
-                      {ASSET_TYPE_LABEL[a.type]}
-                    </Badge>
-                  </span>
-                </div>
-                <div className="p-4">
-                  <p className="font-semibold text-slate-900 group-hover:text-brand-700">{a.name}</p>
-                  <p className="text-xs text-slate-500">
-                    {a.code} · {a.area}, {a.city}
+              <div className="aspect-[16/10] overflow-hidden rounded-2xl bg-neutral-100">
+                {photoOf.get(a.id) && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={photoOf.get(a.id)} alt={a.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" loading="lazy" />
+                )}
+              </div>
+              <div className="mt-3 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-[15px] font-medium text-neutral-900">{a.name}</p>
+                  <p className="text-[13px] text-neutral-500">
+                    {ASSET_TYPE_LABEL[a.type]}, {a.area}
                   </p>
-                  <p className="mt-2 text-xs text-slate-600">{[sizeSummary(a), saleSummary(a)].filter(Boolean).join(" · ")}</p>
-                  <p className="mt-1 text-sm font-medium text-slate-800">{priceSummary(a)}</p>
-                  {a.dailyTraffic && <p className="text-xs text-slate-500">~{num(a.dailyTraffic)} people pass daily</p>}
-                  <div className="mt-3">
-                    <Badge tone={tone} dot>
-                      {label}
-                    </Badge>
-                  </div>
                 </div>
-              </Card>
+                <p className="shrink-0 text-right text-[13px] text-neutral-900">
+                  {a.type === "led" && a.saleMode !== "exclusive" && a.slotRate ? (
+                    <>
+                      {inr(a.slotRate)}
+                      <span className="block text-neutral-500">per slot, month</span>
+                    </>
+                  ) : (
+                    <>
+                      {inr(a.monthlyRate)}
+                      <span className="block text-neutral-500">per month</span>
+                    </>
+                  )}
+                </p>
+              </div>
+              <p className={cn("mt-2 inline-flex items-center gap-2 text-[13px]", tone === "red" ? "text-neutral-500" : "text-neutral-700")}>
+                <StatusDot state={tone === "green" ? "on" : tone === "red" ? "off" : tone === "gray" ? "problem" : "pending"} />
+                {label}
+              </p>
             </Link>
           ))}
         </div>
       )}
       {checking && can(user, "sales") && (
-        <p className="mt-6 text-center text-sm text-slate-500">
+        <p className="mt-6 text-center text-sm text-neutral-500">
           Found what you need?{" "}
-          <Link href={`/quotes/new?from=${from}&to=${to}`} className={cn("font-medium text-brand-700 hover:underline")}>
-            Start a quote for {fmtRange(from, to)} →
+          <Link href={`/quotes/new?from=${from}&to=${to}`} className="font-medium text-neutral-900 underline underline-offset-2">
+            Start a quote for {fmtRange(from, to)}
           </Link>
         </p>
       )}

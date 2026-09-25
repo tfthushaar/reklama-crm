@@ -8,7 +8,7 @@ import { CLIENT_TYPE_LABEL, OPEN_STAGES, stageInfo } from "@/lib/constants";
 import { dueLabel, inrShort, relTime } from "@/lib/format";
 import { can } from "@/lib/permissions";
 import { paidSq } from "@/lib/queries";
-import { Avatar, Badge, Card, EmptyState, LinkButton, PageHeader, Tabs, cn, table } from "@/components/ui";
+import { Avatar, Badge, Card, EmptyState, LinkButton, PageHeader, Tabs, cn, table, StatusLabel } from "@/components/ui";
 
 export const metadata = { title: "Clients" };
 
@@ -107,7 +107,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
           name="q"
           defaultValue={q}
           placeholder="Search by company, contact, phone, city or GSTIN…"
-          className="h-10 w-full max-w-md rounded-lg border border-slate-300 bg-white px-3 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none"
+          className="h-10 w-full max-w-md rounded-full border border-neutral-200 bg-white px-4 text-sm outline-none placeholder:text-neutral-400 focus:border-neutral-900 focus:ring-4 focus:ring-neutral-900/5"
         />
       </form>
       <Card>
@@ -134,30 +134,30 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
                   return (
                     <tr key={c.id} className={table.tr}>
                       <td className={table.td}>
-                        <Link href={`/clients/${c.id}`} className="font-medium text-slate-900 hover:text-brand-700 hover:underline">
+                        <Link href={`/clients/${c.id}`} className="font-medium text-neutral-900 hover:text-brand-700 hover:underline">
                           {c.name}
                         </Link>
-                        <div className="mt-0.5 flex items-center gap-2 text-xs text-slate-500">
-                          {c.type !== "advertiser" && <Badge tone="purple">{CLIENT_TYPE_LABEL[c.type]}</Badge>}
-                          <span>{[contact, c.industry, c.city].filter(Boolean).join(" · ")}</span>
+                        <div className="mt-0.5 flex items-center gap-2 text-xs text-neutral-500">
+                          {c.type !== "advertiser" && <span className="text-neutral-700">{CLIENT_TYPE_LABEL[c.type]},</span>}
+                          <span>{[contact, c.industry, c.city].filter(Boolean).join(", ")}</span>
                         </div>
                       </td>
                       <td className={table.td}>
-                        <Badge tone={st.tone}>{st.label}</Badge>
+                        <StatusLabel tone={st.tone} label={st.label} />
                       </td>
                       <td className={table.td}>
                         {owner ? (
-                          <span className="inline-flex items-center gap-2 text-slate-700">
+                          <span className="inline-flex items-center gap-2 text-neutral-700">
                             <Avatar name={owner} size="sm" /> {owner.split(" ")[0]}
                           </span>
                         ) : (
-                          <span className="text-xs font-medium text-amber-700">Unassigned</span>
+                          <span className="text-xs font-medium text-neutral-900">Unassigned</span>
                         )}
                       </td>
-                      <td className={cn(table.td, "text-slate-600")}>{c.lastActivityAt ? relTime(c.lastActivityAt) : "—"}</td>
-                      <td className={cn(table.td, overdue ? "font-medium text-red-600" : "text-slate-600")}>{d ? dueLabel(d) : "—"}</td>
+                      <td className={cn(table.td, "text-neutral-600")}>{c.lastActivityAt ? relTime(c.lastActivityAt) : "—"}</td>
+                      <td className={cn(table.td, overdue ? "font-medium text-red-600" : "text-neutral-600")}>{d ? dueLabel(d) : "—"}</td>
                       <td className={cn(table.td, "text-right tabular-nums")}>{biz ? inrShort(Number(biz)) : "—"}</td>
-                      <td className={cn(table.td, "text-right tabular-nums", balance && Number(balance) > 0 && "font-medium text-amber-700")}>
+                      <td className={cn(table.td, "text-right tabular-nums", balance && Number(balance) > 0 && "font-medium text-neutral-900")}>
                         {balance && Number(balance) > 0 ? inrShort(Number(balance)) : "—"}
                       </td>
                     </tr>

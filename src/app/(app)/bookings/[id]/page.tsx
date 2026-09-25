@@ -10,7 +10,8 @@ import { addDays, daysBetween, fmtDateTime, fmtDay, fmtRange, inr, relTime, toda
 import { can } from "@/lib/permissions";
 import { paidSq } from "@/lib/queries";
 import { ActionButton, ActionForm, Modal } from "@/components/forms";
-import { Badge, Card, CardHeader, EmptyState, Field, Input, KeyValue, LinkButton, Notice, Select, Textarea, cn, table } from "@/components/ui";
+import { BackLink, Badge, Card, CardHeader, EmptyState, Field, Input, KeyValue, LinkButton, Notice, Select, Textarea, cn, table } from "@/components/ui";
+import { ProgressTrack } from "@/components/progress";
 import { advanceBookingAction, cancelBookingAction, extendBookingAction, updateBookingInfoAction, uploadBookingFileAction } from "@/app/actions/bookings";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -70,29 +71,27 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
         : `Ended ${fmtDay(b.endDate)}`;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-8">
       <div>
-        <Link href="/bookings" className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800">
-          ← Bookings
-        </Link>
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{b.title}</h1>
+        <BackLink href="/bookings" label="Bookings" />
+        <div className="flex flex-wrap items-start justify-between gap-6">
+          <div className="min-w-0">
+            <p className="text-[13px] text-neutral-500 tabular-nums">{b.number}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-3">
+              <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.02em] text-neutral-900">{b.title}</h1>
               <Badge tone={BOOKING_STATUS[b.status].tone}>{BOOKING_STATUS[b.status].label}</Badge>
             </div>
-            <p className="mt-1 text-sm text-slate-500">
-              {b.number} ·{" "}
-              <Link href={`/clients/${client.id}`} className="font-medium text-brand-700 hover:underline">
+            <p className="mt-1.5 text-[15px] text-neutral-500">
+              <Link href={`/clients/${client.id}`} className="text-neutral-900 hover:underline">
                 {client.name}
-              </Link>{" "}
-              · {fmtRange(b.startDate, b.endDate)} · {cancelled ? "cancelled" : timing}
+              </Link>
+              , {fmtRange(b.startDate, b.endDate)}. {cancelled ? "Cancelled." : `${timing}.`}
             </p>
           </div>
           {!cancelled && (
             <div className="flex flex-wrap gap-2">
               {b.status !== "completed" && (
-                <Modal label="Extend" icon={<CalendarPlus />} title="Extend this booking" description="We'll check the screens are free for the extra days.">
+                <Modal label="Extend" title="Extend this booking" description="We'll check the screens are free for the extra days.">
                   <ActionForm action={extendBookingAction} submitLabel="Extend booking">
                     <input type="hidden" name="id" value={id} />
                     <Field label="New end date" required hint={`Currently ends ${fmtDay(b.endDate)}. The amount is increased pro-rata.`}>
@@ -102,7 +101,7 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
                 </Modal>
               )}
               {can(user, "approve") && b.status !== "completed" && (
-                <Modal label="Cancel" icon={<XCircle />} variant="danger" title="Cancel this booking?" description="The screens become available to others straight away.">
+                <Modal label="Cancel booking" variant="ghost" title="Cancel this booking?" description="The screens become available to others straight away.">
                   <ActionForm action={cancelBookingAction} submitLabel="Cancel booking" submitVariant="danger">
                     <input type="hidden" name="id" value={id} />
                     <Field label="Reason" required>
@@ -112,9 +111,7 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
                 </Modal>
               )}
               {can(user, "finance") && (
-                <LinkButton href={`/invoices/new?booking=${id}`}>
-                  <IndianRupee /> Create invoice
-                </LinkButton>
+                <LinkButton href={`/invoices/new?booking=${id}`}>Create invoice</LinkButton>
               )}
             </div>
           )}
@@ -124,32 +121,16 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
       {cancelled ? (
         <Notice tone="red">Cancelled{b.cancelReason ? `: ${b.cancelReason}` : ""}. The screens have been released.</Notice>
       ) : (
-        <Card className="p-5">
-          <ol className="flex flex-wrap items-center gap-2">
-            {BOOKING_STEPS.map((s, i) => {
-              const done = i < stepIdx || b.status === "completed";
-              const current = i === stepIdx && b.status !== "completed";
-              return (
-                <li key={s.key} className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium",
-                      done && "bg-emerald-50 text-emerald-700",
-                      current && "bg-brand-700 text-white",
-                      !done && !current && "bg-slate-100 text-slate-500",
-                    )}
-                  >
-                    {done && <Check className="size-4" />}
-                    {s.label}
-                  </span>
-                  {i < BOOKING_STEPS.length - 1 && <span className="h-px w-5 bg-slate-300" />}
-                </li>
-              );
-            })}
-          </ol>
+        <Card className="p-6">
+          <ProgressTrack
+            steps={BOOKING_STEPS.map((st, i) => ({
+              label: st.label,
+              state: b.status === "completed" || i < stepIdx ? "done" : i === stepIdx ? "current" : "todo",
+            }))}
+          />
           {nextStep && canOps && (
-            <div className="mt-4 flex flex-col gap-3 rounded-lg bg-slate-50 p-4 sm:flex-row sm:items-center">
-              <p className="flex-1 text-sm text-slate-600">
+            <div className="mt-6 flex flex-col gap-3 rounded-2xl bg-neutral-50 p-4 sm:flex-row sm:items-center">
+              <p className="flex-1 text-sm text-neutral-600">
                 {b.status === "confirmed" && "Waiting for the client's creative. Upload it below when it arrives."}
                 {b.status === "creative_received" && "Check the creative fits the screen specs, then approve it."}
                 {b.status === "creative_approved" &&
@@ -187,11 +168,11 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
                   {media.map(({ l, a }) => (
                     <tr key={l.id} className={table.tr}>
                       <td className={table.td}>
-                        <Link href={`/screens/${a?.id}`} className="font-medium text-slate-900 hover:underline">
+                        <Link href={`/screens/${a?.id}`} className="font-medium text-neutral-900 hover:underline">
                           {a?.name}
                         </Link>
-                        <p className="text-xs text-slate-500">
-                          {a?.code} · {a?.area}
+                        <p className="text-xs text-neutral-500">
+                          {a?.code}, {a?.area}
                         </p>
                       </td>
                       <td className={cn(table.td, "whitespace-nowrap")}>{fmtRange(l.startDate, l.endDate)}</td>
@@ -212,8 +193,8 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
                 </tbody>
               </table>
             </div>
-            <div className="flex justify-between border-t border-slate-100 px-5 py-3 text-sm">
-              <span className="text-slate-600">Total including GST{b.commissionPct ? `, after ${b.commissionPct}% agency commission` : ""}</span>
+            <div className="flex justify-between border-t border-neutral-100 px-5 py-3 text-sm">
+              <span className="text-neutral-600">Total including GST{b.commissionPct ? `, after ${b.commissionPct}% agency commission` : ""}</span>
               <span className="font-semibold tabular-nums">{inr(b.total)}</span>
             </div>
           </Card>
@@ -229,13 +210,13 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
             ) : (
               <div className="grid grid-cols-2 gap-3 p-4 md:grid-cols-3">
                 {pops.map(({ f, who }) => (
-                  <a key={f.id} href={f.url} target="_blank" rel="noreferrer" className="group overflow-hidden rounded-lg border border-slate-200">
+                  <a key={f.id} href={f.url} target="_blank" rel="noreferrer" className="group overflow-hidden rounded-lg border border-neutral-200">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={f.url} alt={f.name} className="aspect-[16/10] w-full object-cover transition group-hover:scale-[1.02]" />
                     <div className="px-2.5 py-2">
-                      <p className="truncate text-xs font-medium text-slate-800">{f.name}</p>
-                      <p className="text-[11px] text-slate-500">
-                        {who} · {fmtDateTime(f.createdAt)}
+                      <p className="truncate text-xs font-medium text-neutral-800">{f.name}</p>
+                      <p className="text-[11px] text-neutral-500">
+                        {who}, {fmtDateTime(f.createdAt)}
                       </p>
                     </div>
                   </a>
@@ -258,23 +239,23 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
             {ro.length + creatives.length + others.length === 0 ? (
               <EmptyState icon={<FileText />} title="Nothing uploaded yet" text="Keep the release order, artwork and any approvals here." />
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-neutral-100">
                 {[...ro, ...creatives, ...others].map(({ f, who }) => (
                   <li key={f.id} className="flex items-center gap-3 px-5 py-3">
                     {isImg(f.url) ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={f.url} alt="" className="h-10 w-14 rounded border border-slate-200 object-cover" />
+                      <img src={f.url} alt="" className="h-10 w-14 rounded border border-neutral-200 object-cover" />
                     ) : (
-                      <span className="flex h-10 w-14 items-center justify-center rounded border border-slate-200 bg-slate-50 text-slate-400">
+                      <span className="flex h-10 w-14 items-center justify-center rounded border border-neutral-200 bg-neutral-50 text-neutral-400">
                         <FileText className="size-4" />
                       </span>
                     )}
                     <div className="min-w-0 flex-1">
-                      <a href={f.url} target="_blank" rel="noreferrer" className="block truncate text-sm font-medium text-slate-900 hover:underline">
+                      <a href={f.url} target="_blank" rel="noreferrer" className="block truncate text-sm font-medium text-neutral-900 hover:underline">
                         {f.name}
                       </a>
-                      <p className="text-xs text-slate-500">
-                        {f.kind === "ro" ? "Release order" : f.kind === "creative" ? "Creative" : "Document"} · {who} · {relTime(f.createdAt)}
+                      <p className="text-xs text-neutral-500">
+                        {f.kind === "ro" ? "Release order" : f.kind === "creative" ? "Creative" : "Document"}, {who}, {relTime(f.createdAt)}
                       </p>
                     </div>
                   </li>
@@ -297,32 +278,32 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
                 )
               }
             />
-            <div className="grid grid-cols-3 gap-px bg-slate-100 text-center">
+            <div className="grid grid-cols-3 gap-px bg-neutral-100 text-center">
               {[
                 ["Value", inr(b.total)],
                 ["Invoiced", inr(billed)],
                 ["Received", inr(received)],
               ].map(([k, v]) => (
                 <div key={k} className="bg-white px-2 py-3">
-                  <p className="text-xs text-slate-500">{k}</p>
+                  <p className="text-xs text-neutral-500">{k}</p>
                   <p className="text-sm font-semibold tabular-nums">{v}</p>
                 </div>
               ))}
             </div>
             {invs.length === 0 ? (
-              <p className="px-5 py-4 text-sm text-slate-500">No invoices yet.{b.advanceAmount ? ` Advance agreed: ${inr(b.advanceAmount)}.` : ""}</p>
+              <p className="px-5 py-4 text-sm text-neutral-500">No invoices yet.{b.advanceAmount ? ` Advance agreed: ${inr(b.advanceAmount)}.` : ""}</p>
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-neutral-100">
                 {invs.map(({ i, paid }) => {
                   const overdue = ["issued", "partial"].includes(i.status) && i.dueDate < t;
                   return (
                     <li key={i.id}>
-                      <Link href={`/invoices/${i.id}`} className="flex items-center justify-between gap-2 px-5 py-3 hover:bg-slate-50">
+                      <Link href={`/invoices/${i.id}`} className="flex items-center justify-between gap-2 px-5 py-3 hover:bg-neutral-50">
                         <div>
-                          <p className="text-sm font-medium text-slate-900">{i.number ?? "Draft invoice"}</p>
-                          <p className="text-xs text-slate-500">
-                            {i.kind === "proforma" ? "Proforma" : "Tax invoice"} · {inr(i.total)}
-                            {Number(paid ?? 0) > 0 ? ` · ${inr(Number(paid))} received` : ""}
+                          <p className="text-sm font-medium text-neutral-900">{i.number ?? "Draft invoice"}</p>
+                          <p className="text-xs text-neutral-500">
+                            {i.kind === "proforma" ? "Proforma" : "Tax invoice"}, {inr(i.total)}
+                            {Number(paid ?? 0) > 0 ? `, ${inr(Number(paid))} received` : ""}
                           </p>
                         </div>
                         <Badge tone={overdue ? "red" : INVOICE_STATUS[i.status].tone}>{overdue ? "Overdue" : INVOICE_STATUS[i.status].label}</Badge>
@@ -376,7 +357,7 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
                 items={[
                   ["Client", <Link key="c" href={`/clients/${client.id}`} className="text-brand-700 hover:underline">{client.name}</Link>],
                   ["From quote", row.quoteNo ? <Link key="q" href={`/quotes/${b.quoteId}`} className="text-brand-700 hover:underline">{row.quoteNo}</Link> : null],
-                  ["Release order", b.roNumber ? `${b.roNumber}${b.roDate ? ` · ${fmtDay(b.roDate)}` : ""}` : <span className="text-amber-700">Not received</span>],
+                  ["Release order", b.roNumber ? `${b.roNumber}${b.roDate ? `, ${fmtDay(b.roDate)}` : ""}` : <span className="text-neutral-900">Not received</span>],
                   ["Advance agreed", b.advanceAmount ? inr(b.advanceAmount) : null],
                   ["Payment terms", b.paymentTerms],
                   ["Campaign owner", owner?.name],
@@ -391,9 +372,9 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
             <ul className="space-y-3 px-5 py-4">
               {log.map(({ a, who }) => (
                 <li key={a.id} className="text-sm">
-                  <p className="text-slate-700">{a.notes}</p>
-                  <p className="text-xs text-slate-400">
-                    {who} · {fmtDateTime(a.occurredAt)}
+                  <p className="text-neutral-700">{a.notes}</p>
+                  <p className="text-xs text-neutral-400">
+                    {who}, {fmtDateTime(a.occurredAt)}
                   </p>
                 </li>
               ))}

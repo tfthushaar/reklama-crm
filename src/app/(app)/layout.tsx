@@ -11,13 +11,13 @@ import { logoutAction } from "@/app/actions/auth";
 
 const NAV: Record<NavKey, Omit<NavItem, "badge">> = {
   home: { key: "home", href: "/", label: "Home", group: "" },
-  tasks: { key: "tasks", href: "/tasks", label: "My tasks", group: "" },
+  tasks: { key: "tasks", href: "/tasks", label: "Tasks", group: "" },
   leads: { key: "leads", href: "/leads", label: "Leads", group: "Sales" },
   clients: { key: "clients", href: "/clients", label: "Clients", group: "Sales" },
   quotes: { key: "quotes", href: "/quotes", label: "Quotes", group: "Sales" },
   screens: { key: "screens", href: "/screens", label: "Screens", group: "Operations" },
   bookings: { key: "bookings", href: "/bookings", label: "Bookings", group: "Operations" },
-  invoices: { key: "invoices", href: "/invoices", label: "Invoices & payments", group: "Money" },
+  invoices: { key: "invoices", href: "/invoices", label: "Invoices", group: "Money" },
   reports: { key: "reports", href: "/reports", label: "Reports", group: "Money" },
   settings: { key: "settings", href: "/settings", label: "Settings", group: "Admin" },
 };
@@ -44,7 +44,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }));
 
   return (
-    <Shell nav={nav} user={{ name: user.name, role: ROLE_LABEL[user.role] }} logout={logoutAction}>
+    <Shell
+      nav={nav}
+      user={{ name: user.name, role: ROLE_LABEL[user.role] }}
+      logout={logoutAction}
+      canCreate={{ lead: can(user, "sales"), quote: can(user, "sales"), screen: can(user, "inventory") }}
+    >
       {children}
     </Shell>
   );

@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:setup": "tsx --tsconfig tsconfig.json scripts/setup-db.ts",
-    "db:setup:remote": "tsx --env-file=.env.local --tsconfig tsconfig.json scripts/setup-db.ts"
+    "db:setup:remote": "tsx --env-file=.env.vercel.local --tsconfig tsconfig.json scripts/setup-db.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",

@@ -7,7 +7,7 @@ import { requireUser } from "@/lib/auth";
 import { INVOICE_STATUS } from "@/lib/constants";
 import { daysBetween, fmtDay, inr, inrShort, monthStart, today } from "@/lib/format";
 import { collectedBetween, outstandingSummary, paidSq } from "@/lib/queries";
-import { Badge, Card, EmptyState, PageHeader, Stat, Tabs, buttonClass, cn, table } from "@/components/ui";
+import { Badge, Card, EmptyState, PageHeader, Stat, StatRow, Tabs, buttonClass, cn, table, StatusLabel } from "@/components/ui";
 
 export const metadata = { title: "Invoices" };
 
@@ -71,28 +71,28 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Pro
           </a>
         }
       />
-      <div className="mb-6 grid gap-3 md:grid-cols-4">
+      <StatRow className="mb-8">
         <Stat label="Outstanding" value={inrShort(out.outstanding)} hint="All unpaid invoices" />
         <Stat label="Overdue" value={inrShort(out.overdue)} hint={`${out.overdueCount} invoice${out.overdueCount === 1 ? "" : "s"} past due`} tone={out.overdue ? "red" : undefined} href="/invoices?tab=overdue" />
         <Stat label="Collected this month" value={inrShort(collected)} tone="green" />
-        <Card className="p-4">
-          <p className="mb-2 text-sm text-slate-500">Outstanding by age</p>
+        <div className="px-6 py-5">
+          <p className="mb-2.5 text-[13px] text-neutral-500">Outstanding by age</p>
           <div className="space-y-1">
             {buckets.map(({ b, amount }) => (
               <div key={b} className="flex items-center gap-2 text-[11px]">
-                <span className="w-16 shrink-0 text-slate-500">{b}</span>
-                <span className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                <span className="w-16 shrink-0 text-neutral-500">{b}</span>
+                <span className="h-2 flex-1 overflow-hidden rounded-full bg-neutral-100">
                   <span
-                    className={cn("block h-full rounded-full", b === "Not due" ? "bg-slate-400" : b === "1–30 days" ? "bg-amber-400" : "bg-red-500")}
+                    className={cn("block h-full rounded-full", b === "Not due" ? "bg-neutral-300" : b === "1–30 days" ? "bg-neutral-600" : "bg-red-500")}
                     style={{ width: `${(amount / maxBucket) * 100}%` }}
                   />
                 </span>
-                <span className="w-14 shrink-0 text-right font-medium text-slate-700 tabular-nums">{amount ? inrShort(amount) : "—"}</span>
+                <span className="w-14 shrink-0 text-right font-medium text-neutral-700 tabular-nums">{amount ? inrShort(amount) : "—"}</span>
               </div>
             ))}
           </div>
-        </Card>
-      </div>
+        </div>
+      </StatRow>
 
       <Tabs items={TABS.map((k) => ({ label: LABEL[k], href: `/invoices?tab=${k}`, active: tab === k, count: k === "draft" ? drafts : k === "overdue" ? out.overdueCount : undefined }))} />
       <Card>
@@ -119,16 +119,16 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Pro
                   return (
                     <tr key={i.id} className={table.tr}>
                       <td className={table.td}>
-                        <Link href={`/invoices/${i.id}`} className="font-medium text-slate-900 hover:text-brand-700 hover:underline">
+                        <Link href={`/invoices/${i.id}`} className="font-medium text-neutral-900 hover:text-brand-700 hover:underline">
                           {i.number ?? "Draft"}
                         </Link>
-                        <p className="text-xs text-slate-500">
-                          {i.kind === "proforma" ? "Proforma · " : ""}
+                        <p className="text-xs text-neutral-500">
+                          {i.kind === "proforma" ? "Proforma, " : ""}
                           {fmtDay(i.issueDate)}
-                          {booking ? ` · ${booking}` : ""}
+                          {booking ? `, ${booking}` : ""}
                         </p>
                       </td>
-                      <td className={cn(table.td, "text-slate-700")}>
+                      <td className={cn(table.td, "text-neutral-700")}>
                         <Link href={`/clients/${i.clientId}`} className="hover:underline">
                           {client}
                         </Link>
@@ -138,7 +138,7 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Pro
                         {late > 0 && <p className="text-xs">{late} days late</p>}
                       </td>
                       <td className={table.td}>
-                        <Badge tone={late ? "red" : INVOICE_STATUS[i.status].tone}>{late ? "Overdue" : INVOICE_STATUS[i.status].label}</Badge>
+                        <StatusLabel tone={late ? "red" : INVOICE_STATUS[i.status].tone} label={late ? "Overdue" : INVOICE_STATUS[i.status].label} />
                       </td>
                       <td className={cn(table.td, "text-right tabular-nums")}>{inr(i.total)}</td>
                       <td className={cn(table.td, "text-right font-medium tabular-nums")}>{i.status === "cancelled" || i.status === "draft" ? "—" : inr(bal)}</td>
