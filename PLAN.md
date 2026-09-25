@@ -659,24 +659,22 @@ flowchart LR
 
 ## 9. Delivery roadmap
 
-Estimates are rough, for one full-stack developer, and exclude time spent waiting on client reviews.
-
-### Phase 1: Core CRM, usable end to end (~15–16 weeks)
+### Phase 1: Core CRM, usable end to end
 
 Phase 1 includes the spec's Phase 1 plus only the additions that **shape the data model**: faces, DOOH slots, holds, agencies/RO, GST/TDS. Adding those later would mean a rewrite.
 
-| # | Milestone | Scope | Weeks |
-|---|---|---|---|
-| M0 | Foundation | Repo, CI, staging, auth + two-factor login, roles/permissions, audit triggers, settings screens, app shell | 1.5 |
-| M1 | Accounts & leads | Advertiser/agency accounts, contacts, billing profiles/GSTIN, import + duplicate detection, pipeline board, assignment rules, activities + timeline, quick actions | 2.5 |
-| M2 | Tasks & notifications | Tasks, automatic tasks from events, daily agenda, overdue/stale alerts, email digest, owner and executive home screens | 1 |
-| M3 | Inventory & map | Structures/faces, static + DOOH attributes, import of the current Excel sheet, photo library, map view, availability Gantt | 2.5 |
-| M4 | Planning & proposals | Briefs, plan builder with CPM, rate cards/rules, production items, agency commission, GST, discount approvals, versions, branded PDF with photos, email sending | 2.5 |
-| M5 | Holds & bookings | Holds with expiry and queue, RO capture, confirmation → allocation (DB constraints), DOOH slots, booking changes, basic campaign status + POP upload | 2 |
-| M6 | Billing | Numbering by FY, proforma + tax invoices, GST split, payments with TDS, receipts, aging, credit-limit warnings | 2 |
-| M7 | Reports & launch | Core reports + exports, global search, backup/restore drill, data migration, UAT against §10, training | 1.5 |
+| # | Milestone | Scope |
+|---|---|---|
+| M0 | Foundation | Repo, CI, staging, auth + two-factor login, roles/permissions, audit triggers, settings screens, app shell |
+| M1 | Accounts & leads | Advertiser/agency accounts, contacts, billing profiles/GSTIN, import + duplicate detection, pipeline board, assignment rules, activities + timeline, quick actions |
+| M2 | Tasks & notifications | Tasks, automatic tasks from events, daily agenda, overdue/stale alerts, email digest, owner and executive home screens |
+| M3 | Inventory & map | Structures/faces, static + DOOH attributes, import of the current Excel sheet, photo library, map view, availability Gantt |
+| M4 | Planning & proposals | Briefs, plan builder with CPM, rate cards/rules, production items, agency commission, GST, discount approvals, versions, branded PDF with photos, email sending |
+| M5 | Holds & bookings | Holds with expiry and queue, RO capture, confirmation → allocation (DB constraints), DOOH slots, booking changes, basic campaign status + POP upload |
+| M6 | Billing | Numbering by FY, proforma + tax invoices, GST split, payments with TDS, receipts, aging, credit-limit warnings |
+| M7 | Reports & launch | Core reports + exports, global search, backup/restore drill, data migration, UAT against §10, training |
 
-### Phase 2: Operations & finance (~10–12 weeks)
+### Phase 2: Operations & finance
 
 - **Creative:** creative management and spec checks, creative mockups.
 - **Static execution:** work orders, field app with geo-verified POP, automatic POP reports.
@@ -687,14 +685,14 @@ Phase 1 includes the spec's Phase 1 plus only the additions that **shape the dat
 - **Sales:** renewal engine with first refusal, targets and incentives, competitive-intelligence capture.
 - **Analytics:** occupancy, yield, DSO and the other reports in §4.15.
 
-### Phase 3: Integrations & growth (~8–12 weeks, plus provider onboarding)
+### Phase 3: Integrations & growth
 
 - **Channels:** WhatsApp Business API, telephony, two-way email sync.
 - **Client-facing:** client/agency portal, shareable proposal links with view tracking, vacancy broadcast.
 - **Screens:** CMS integration and screen-health monitoring.
 - **Growth:** AI assist, site-acquisition pipeline, automated lead sourcing.
 
-> WhatsApp template approval and telephony KYC can each take 1–3 weeks. Start the paperwork during Phase 2.
+> WhatsApp template approval and telephony KYC need provider paperwork. Start it during Phase 2.
 
 ---
 

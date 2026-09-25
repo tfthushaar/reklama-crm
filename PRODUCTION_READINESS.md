@@ -26,18 +26,18 @@ It is still a **demo**, not a system to run the business on:
 
 ### 2a. Gaps in features that already exist (close these before go-live)
 
-| Area | What's missing | Rough effort |
-|---|---|---|
-| Editing records | Edit or delete contacts; change a booking's screens or slots after confirmation (swap a screen, add a screen); archive/restore clients and screens; merge duplicate clients | 4–5 days |
-| Holds | A visible 1st/2nd option queue per screen, manual "extend hold", notifying the next in line when a hold lapses (today holds simply expire, and conflicting holds are released on booking) | 2–3 days |
-| Visibility rules | Decide whether sales executives see only their own clients, and enforce it on every list and page | 2 days |
-| Configuration | Editable pipeline stages, lost reasons, industries, lead sources and production presets (fixed lists today) | 2 days |
-| Notifications | Reminders appear only inside the app. Add a daily email digest and browser push; add WhatsApp once the integration exists | 3–4 days |
-| Documents | Server-generated PDFs for quotes, invoices and receipts, so they can be attached to email/WhatsApp automatically and stored with the record | 3 days |
-| Credit notes | Credit/debit notes for cancellations after payment, discounts after invoicing and make-goods, with their own number series | 3 days |
-| Scale | Pagination on every list; faster fuzzy search (Postgres full-text / trigram) instead of simple "contains" matching | 2–3 days |
-| Accounts | Forgot/change password, sign out of all devices | 2 days |
-| Bulk actions | Reassign many leads at once, bulk status updates | 1–2 days |
+| Area | What's missing |
+|---|---|
+| Editing records | Edit or delete contacts; change a booking's screens or slots after confirmation (swap a screen, add a screen); archive/restore clients and screens; merge duplicate clients |
+| Holds | A visible 1st/2nd option queue per screen, manual "extend hold", notifying the next in line when a hold lapses (today holds simply expire, and conflicting holds are released on booking) |
+| Visibility rules | Decide whether sales executives see only their own clients, and enforce it on every list and page |
+| Configuration | Editable pipeline stages, lost reasons, industries, lead sources and production presets (fixed lists today) |
+| Notifications | Reminders appear only inside the app. Add a daily email digest and browser push; add WhatsApp once the integration exists |
+| Documents | Server-generated PDFs for quotes, invoices and receipts, so they can be attached to email/WhatsApp automatically and stored with the record |
+| Credit notes | Credit/debit notes for cancellations after payment, discounts after invoicing and make-goods, with their own number series |
+| Scale | Pagination on every list; faster fuzzy search (Postgres full-text / trigram) instead of simple "contains" matching |
+| Accounts | Forgot/change password, sign out of all devices |
+| Bulk actions | Reassign many leads at once, bulk status updates |
 
 ### 2b. Phase 2: operations & finance ([PLAN.md](PLAN.md) §4, §9)
 
@@ -61,8 +61,6 @@ It is still a **demo**, not a system to run the business on:
 - **Accounting:** Tally export or Zoho Books sync; e-invoicing (IRN/QR) if Reklama's turnover requires it.
 - **Sales:** monthly targets and incentives, a renewal flow that gives the current advertiser first refusal, and capture of competitor sites as leads.
 
-**Rough effort:** 10–12 weeks for one developer.
-
 ### 2c. Phase 3: integrations & growth
 
 - **WhatsApp Business API** through a provider (Interakt, Gupshup, WATI, AiSensy or Meta directly):
@@ -78,7 +76,7 @@ It is still a **demo**, not a system to run the business on:
 - **AI assist:** timeline summaries, drafting follow-ups, reading release orders to pre-fill bookings.
 - **Automated lead sourcing**, only with a named data provider and a lawful basis.
 
-**Rough effort:** 8–12 weeks, plus provider onboarding. WhatsApp template approval and telephony KYC take 1–3 weeks each, so start the paperwork early.
+WhatsApp template approval and telephony KYC need provider paperwork, so start it early.
 
 ### 2d. Deferred by decision
 
@@ -178,7 +176,7 @@ The prototype runs on **Vercel (free tier) + Turso (free tier)**, chosen only so
 - [ ] CI pipeline (GitHub Actions): type check, lint, tests and build on every push.
 - [ ] Accessibility pass: keyboard use in dialogs, labels on every input, colour contrast.
 - [ ] Testing on real phones (Android Chrome, iPhone Safari) and on slow connections.
-- [ ] **User acceptance testing** with Reklama staff against the checklist in [PLAN.md](PLAN.md) §10, ideally a 2-week parallel run beside their current Excel/WhatsApp process.
+- [ ] **User acceptance testing** with Reklama staff against the checklist in [PLAN.md](PLAN.md) §10, ideally a parallel run beside their current Excel/WhatsApp process.
 
 ### Go-live & adoption
 
@@ -206,16 +204,14 @@ These change how the system behaves; see [PLAN.md](PLAN.md) §11.
 
 ---
 
-## 5. Suggested order and rough timeline
+## 5. Suggested order
 
-Estimates assume one full-stack developer and exclude waiting time for client decisions and provider approvals.
-
-| Stage | Scope | Rough effort |
-|---|---|---|
-| 1. Production hardening | Everything in §3, plus the gaps in §2a | 4–5 weeks |
-| 2. Pilot | Load real data, train users, 2-week parallel run, fix feedback | 2–3 weeks |
-| 3. Phase 2 | Operations & finance (§2b) | 10–12 weeks |
-| 4. Phase 3 | Integrations & growth (§2c) | 8–12 weeks + onboarding |
+| Stage | Scope |
+|---|---|
+| 1. Production hardening | Everything in §3, plus the gaps in §2a |
+| 2. Pilot | Load real data, train users, parallel run, fix feedback |
+| 3. Phase 2 | Operations & finance (§2b) |
+| 4. Phase 3 | Integrations & growth (§2c) |
 
 ### Running costs to budget for
 
