@@ -1,9 +1,9 @@
 "use server";
 
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, inArray, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/db";
-import { quotes } from "@/db/schema";
+import { holds, quoteLines, quoteVersions, quotes, tasks } from "@/db/schema";
 import { requirePerm, requireUser } from "@/lib/auth";
 import { form, run } from "@/lib/action";
 import { loadAvailability } from "@/lib/availability";
@@ -193,7 +193,14 @@ export async function deleteDraftQuoteAction(fd: FormData) {
     const id = form.id(fd);
     const [q] = await db.select().from(quotes).where(eq(quotes.id, id));
     if (!q || !["draft", "pending_approval"].includes(q.status) || q.sentAt) throw new UserError("Only unsent drafts can be deleted.");
-    await db.delete(quotes).where(and(eq(quotes.id, id), ne(quotes.status, "accepted")));
+    await db.transaction(async (tx) => {
+      const versionIds = (await tx.select({ id: quoteVersions.id }).from(quoteVersions).where(eq(quoteVersions.quoteId, id))).map((v) => v.id);
+      if (versionIds.length) await tx.delete(quoteLines).where(inArray(quoteLines.versionId, versionIds));
+      await tx.delete(quoteVersions).where(eq(quoteVersions.quoteId, id));
+      await tx.delete(holds).where(eq(holds.quoteId, id));
+      await tx.delete(tasks).where(and(eq(tasks.refType, "quote"), eq(tasks.refId, id)));
+      await tx.delete(quotes).where(and(eq(quotes.id, id), ne(quotes.status, "accepted")));
+    });
     revalidatePath("/", "layout");
     return { ok: true, message: "Draft deleted", redirectTo: "/quotes" };
   });

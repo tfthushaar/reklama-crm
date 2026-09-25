@@ -106,31 +106,31 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
 async function SalesReport({ fromTs, toTs }: { from: string; to: string; fromTs: Date; toTs: Date }) {
   const db = await getDb();
   const [booked] = await db
-    .select({ value: sql<number>`coalesce(sum(${bookings.total}),0)::bigint`, n: sql<number>`count(*)::int` })
+    .select({ value: sql<number>`coalesce(sum(${bookings.total}),0)`, n: sql<number>`count(*)` })
     .from(bookings)
     .where(and(ne(bookings.status, "cancelled"), gte(bookings.createdAt, fromTs), lte(bookings.createdAt, toTs)));
   const [sent] = await db
-    .select({ n: sql<number>`count(*)::int` })
+    .select({ n: sql<number>`count(*)` })
     .from(quotes)
     .where(and(isNotNull(quotes.sentAt), gte(quotes.sentAt, fromTs), lte(quotes.sentAt, toTs)));
   const [decided] = await db
     .select({
-      won: sql<number>`count(*) filter (where ${quotes.status} = 'accepted')::int`,
-      lost: sql<number>`count(*) filter (where ${quotes.status} = 'rejected')::int`,
+      won: sql<number>`count(*) filter (where ${quotes.status} = 'accepted')`,
+      lost: sql<number>`count(*) filter (where ${quotes.status} = 'rejected')`,
     })
     .from(quotes)
     .where(and(isNotNull(quotes.respondedAt), gte(quotes.respondedAt, fromTs), lte(quotes.respondedAt, toTs)));
   const winRate = decided!.won + decided!.lost ? Math.round((decided!.won / (decided!.won + decided!.lost)) * 100) : null;
-  const [newLeads] = await db.select({ n: sql<number>`count(*)::int` }).from(clients).where(and(gte(clients.createdAt, fromTs), lte(clients.createdAt, toTs)));
+  const [newLeads] = await db.select({ n: sql<number>`count(*)` }).from(clients).where(and(gte(clients.createdAt, fromTs), lte(clients.createdAt, toTs)));
 
-  const stageCounts = await db.select({ stage: clients.stage, n: sql<number>`count(*)::int` }).from(clients).groupBy(clients.stage);
+  const stageCounts = await db.select({ stage: clients.stage, n: sql<number>`count(*)` }).from(clients).groupBy(clients.stage);
   const sources = await db
-    .select({ source: clients.source, n: sql<number>`count(*)::int`, won: sql<number>`count(*) filter (where ${clients.stage} = 'won')::int` })
+    .select({ source: clients.source, n: sql<number>`count(*)`, won: sql<number>`count(*) filter (where ${clients.stage} = 'won')` })
     .from(clients)
     .where(and(gte(clients.createdAt, fromTs), lte(clients.createdAt, toTs)))
     .groupBy(clients.source);
   const lost = await db
-    .select({ reason: clients.lostReason, n: sql<number>`count(*)::int` })
+    .select({ reason: clients.lostReason, n: sql<number>`count(*)` })
     .from(clients)
     .where(eq(clients.stage, "lost"))
     .groupBy(clients.lostReason);
@@ -139,16 +139,16 @@ async function SalesReport({ fromTs, toTs }: { from: string; to: string; fromTs:
   const quoteStats = await db
     .select({
       userId: quotes.createdBy,
-      created: sql<number>`count(*)::int`,
-      sent: sql<number>`count(*) filter (where ${quotes.sentAt} is not null)::int`,
-      pipeline: sql<number>`coalesce(sum(${quoteVersions.total}) filter (where ${quotes.status} = 'sent'),0)::bigint`,
+      created: sql<number>`count(*)`,
+      sent: sql<number>`count(*) filter (where ${quotes.sentAt} is not null)`,
+      pipeline: sql<number>`coalesce(sum(${quoteVersions.total}) filter (where ${quotes.status} = 'sent'),0)`,
     })
     .from(quotes)
     .innerJoin(quoteVersions, and(eq(quoteVersions.quoteId, quotes.id), eq(quoteVersions.version, quotes.currentVersion)))
     .where(and(gte(quotes.createdAt, fromTs), lte(quotes.createdAt, toTs)))
     .groupBy(quotes.createdBy);
   const bookStats = await db
-    .select({ userId: bookings.createdBy, n: sql<number>`count(*)::int`, value: sql<number>`coalesce(sum(${bookings.total}),0)::bigint` })
+    .select({ userId: bookings.createdBy, n: sql<number>`count(*)`, value: sql<number>`coalesce(sum(${bookings.total}),0)` })
     .from(bookings)
     .where(and(ne(bookings.status, "cancelled"), gte(bookings.createdAt, fromTs), lte(bookings.createdAt, toTs)))
     .groupBy(bookings.createdBy);
@@ -247,7 +247,7 @@ async function TeamReport({ fromTs, toTs }: { fromTs: Date; toTs: Date }) {
   const db = await getDb();
   const people = await db.select().from(users).where(eq(users.active, true));
   const acts = await db
-    .select({ userId: activities.userId, type: activities.type, n: sql<number>`count(*)::int` })
+    .select({ userId: activities.userId, type: activities.type, n: sql<number>`count(*)` })
     .from(activities)
     .where(and(gte(activities.occurredAt, fromTs), lte(activities.occurredAt, toTs), ne(activities.type, "system")))
     .groupBy(activities.userId, activities.type);
@@ -255,8 +255,8 @@ async function TeamReport({ fromTs, toTs }: { fromTs: Date; toTs: Date }) {
   const taskStats = await db
     .select({
       userId: tasks.assignedTo,
-      done: sql<number>`count(*) filter (where ${tasks.status} = 'done' and ${tasks.completedAt} >= ${fromTs} and ${tasks.completedAt} < ${toTs})::int`,
-      overdue: sql<number>`count(*) filter (where ${tasks.status} = 'open' and ${tasks.dueAt} < ${now})::int`,
+      done: sql<number>`count(*) filter (where ${tasks.status} = 'done' and ${tasks.completedAt} >= ${fromTs.getTime()} and ${tasks.completedAt} < ${toTs.getTime()})`,
+      overdue: sql<number>`count(*) filter (where ${tasks.status} = 'open' and ${tasks.dueAt} < ${now.getTime()})`,
     })
     .from(tasks)
     .groupBy(tasks.assignedTo);
@@ -403,11 +403,11 @@ async function ScreensReport({ from, to }: { from: string; to: string }) {
 async function MoneyReport({ from, to }: { from: string; to: string }) {
   const db = await getDb();
   const [inv] = await db
-    .select({ total: sql<number>`coalesce(sum(${invoices.total}),0)::bigint`, gst: sql<number>`coalesce(sum(${invoices.cgst} + ${invoices.sgst} + ${invoices.igst}),0)::bigint` })
+    .select({ total: sql<number>`coalesce(sum(${invoices.total}),0)`, gst: sql<number>`coalesce(sum(${invoices.cgst} + ${invoices.sgst} + ${invoices.igst}),0)` })
     .from(invoices)
     .where(and(eq(invoices.kind, "tax"), inArray(invoices.status, ["issued", "partial", "paid"]), gte(invoices.issueDate, from), lte(invoices.issueDate, to)));
   const [pay] = await db
-    .select({ amount: sql<number>`coalesce(sum(${payments.amount}),0)::bigint`, tds: sql<number>`coalesce(sum(${payments.tds}),0)::bigint` })
+    .select({ amount: sql<number>`coalesce(sum(${payments.amount}),0)`, tds: sql<number>`coalesce(sum(${payments.tds}),0)` })
     .from(payments)
     .where(and(gte(payments.date, from), lte(payments.date, to)));
   const out = await outstandingSummary(db);
@@ -416,8 +416,8 @@ async function MoneyReport({ from, to }: { from: string; to: string }) {
     .select({
       id: clients.id,
       name: clients.name,
-      balance: sql<number>`sum(${invoices.total} - coalesce(${p.paid},0))::bigint`,
-      overdue: sql<number>`sum(case when ${invoices.dueDate} < ${today()} then ${invoices.total} - coalesce(${p.paid},0) else 0 end)::bigint`,
+      balance: sql<number>`sum(${invoices.total} - coalesce(${p.paid},0))`,
+      overdue: sql<number>`sum(case when ${invoices.dueDate} < ${today()} then ${invoices.total} - coalesce(${p.paid},0) else 0 end)`,
       oldest: sql<string>`min(${invoices.dueDate})`,
     })
     .from(invoices)
@@ -426,7 +426,7 @@ async function MoneyReport({ from, to }: { from: string; to: string }) {
     .where(inArray(invoices.status, ["issued", "partial"]))
     .groupBy(clients.id, clients.name);
   const monthly = await db
-    .select({ m: sql<string>`to_char(${payments.date}, 'YYYY-MM')`, amount: sql<number>`sum(${payments.amount})::bigint` })
+    .select({ m: sql<string>`substr(${payments.date}, 1, 7)`, amount: sql<number>`sum(${payments.amount})` })
     .from(payments)
     .where(and(gte(payments.date, from), lte(payments.date, to)))
     .groupBy(sql`1`)

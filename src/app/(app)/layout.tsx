@@ -29,12 +29,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const endOfToday = istDateTime(addDays(today(), 1), "00:00");
   const [{ due }] = await db
-    .select({ due: sql<number>`count(*)::int` })
+    .select({ due: sql<number>`count(*)` })
     .from(tasks)
     .where(and(eq(tasks.assignedTo, user.id), eq(tasks.status, "open"), lte(tasks.dueAt, endOfToday)));
   let approvals = 0;
   if (can(user, "approve")) {
-    const [r] = await db.select({ n: sql<number>`count(*)::int` }).from(quotes).where(eq(quotes.status, "pending_approval"));
+    const [r] = await db.select({ n: sql<number>`count(*)` }).from(quotes).where(eq(quotes.status, "pending_approval"));
     approvals = r?.n ?? 0;
   }
 

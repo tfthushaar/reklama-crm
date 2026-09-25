@@ -181,7 +181,7 @@ export async function updateTicketAction(fd: FormData) {
       .returning();
     if (t && status === "resolved") {
       const [{ open }] = await db
-        .select({ open: sql<number>`count(*)::int` })
+        .select({ open: sql<number>`count(*)` })
         .from(maintenanceTickets)
         .where(and(eq(maintenanceTickets.assetId, t.assetId), ne(maintenanceTickets.status, "resolved")));
       if (open === 0) await db.update(assets).set({ status: "active" }).where(and(eq(assets.id, t.assetId), eq(assets.status, "maintenance")));

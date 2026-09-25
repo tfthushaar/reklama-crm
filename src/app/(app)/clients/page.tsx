@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { and, desc, eq, ilike, inArray, isNull, min, ne, or, sql } from "drizzle-orm";
+import { and, desc, eq, like, inArray, isNull, min, ne, or, sql } from "drizzle-orm";
 import { Building2, Upload } from "lucide-react";
 import { getDb } from "@/db";
 import { bookings, clients, contacts, invoices, tasks, users } from "@/db/schema";
@@ -33,8 +33,8 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
   if (sp.owner === "me") where.push(eq(clients.ownerId, user.id));
   if (sp.owner === "none") where.push(isNull(clients.ownerId));
   if (q) {
-    const contactMatch = db.select({ id: contacts.clientId }).from(contacts).where(or(ilike(contacts.name, `%${q}%`), ilike(contacts.phone, `%${q}%`)));
-    where.push(or(ilike(clients.name, `%${q}%`), ilike(clients.city, `%${q}%`), ilike(clients.gstin, `%${q}%`), inArray(clients.id, contactMatch))!);
+    const contactMatch = db.select({ id: contacts.clientId }).from(contacts).where(or(like(contacts.name, `%${q}%`), like(contacts.phone, `%${q}%`)));
+    where.push(or(like(clients.name, `%${q}%`), like(clients.city, `%${q}%`), like(clients.gstin, `%${q}%`), inArray(clients.id, contactMatch))!);
   }
 
   const nextTask = db
@@ -44,14 +44,14 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
     .groupBy(tasks.clientId)
     .as("nt");
   const business = db
-    .select({ clientId: bookings.clientId, total: sql<number>`sum(${bookings.total})::bigint`.as("biz") })
+    .select({ clientId: bookings.clientId, total: sql<number>`sum(${bookings.total})`.as("biz") })
     .from(bookings)
     .where(ne(bookings.status, "cancelled"))
     .groupBy(bookings.clientId)
     .as("biz");
   const p = paidSq(db);
   const due = db
-    .select({ clientId: invoices.clientId, balance: sql<number>`sum(${invoices.total} - coalesce(${p.paid},0))::bigint`.as("bal") })
+    .select({ clientId: invoices.clientId, balance: sql<number>`sum(${invoices.total} - coalesce(${p.paid},0))`.as("bal") })
     .from(invoices)
     .leftJoin(p, eq(p.invoiceId, invoices.id))
     .where(inArray(invoices.status, ["issued", "partial"]))
@@ -76,7 +76,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
     .orderBy(desc(clients.updatedAt));
 
   const counts = await db
-    .select({ stage: clients.stage, n: sql<number>`count(*)::int` })
+    .select({ stage: clients.stage, n: sql<number>`count(*)` })
     .from(clients)
     .groupBy(clients.stage);
   const count = (keys: string[]) => counts.filter((c) => keys.includes(c.stage)).reduce((s, c) => s + c.n, 0);

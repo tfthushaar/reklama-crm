@@ -1,11 +1,12 @@
 import "server-only";
 import crypto from "node:crypto";
-import fs from "node:fs/promises";
 import path from "node:path";
+import { getDb } from "@/db";
+import { storedFiles } from "@/db/schema";
 import { UserError } from "./services/common";
 
-export const UPLOAD_DIR = path.join(process.cwd(), ".data", "uploads");
-const MAX = 15 * 1024 * 1024;
+// Vercel rejects request bodies over ~4.5 MB, so uploads are capped just below that.
+const MAX = 4 * 1024 * 1024;
 
 export const MIME: Record<string, string> = {
   ".jpg": "image/jpeg",
@@ -13,7 +14,6 @@ export const MIME: Record<string, string> = {
   ".png": "image/png",
   ".webp": "image/webp",
   ".gif": "image/gif",
-  ".svg": "image/svg+xml",
   ".pdf": "application/pdf",
   ".mp4": "video/mp4",
   ".mov": "video/quicktime",
@@ -23,14 +23,22 @@ export const MIME: Record<string, string> = {
   ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 };
 
-export async function saveUpload(file: File, opts: { imagesOnly?: boolean } = {}) {
+export async function saveUpload(file: File, opts: { imagesOnly?: boolean; userId?: number } = {}) {
   if (!file || file.size === 0) throw new UserError("Choose a file to upload.");
-  if (file.size > MAX) throw new UserError("That file is larger than 15 MB.");
+  if (file.size > MAX) throw new UserError("That file is larger than 4 MB. Please compress it or share a smaller version.");
   const ext = path.extname(file.name).toLowerCase();
-  if (!MIME[ext] || ext === ".svg") throw new UserError("That file type isn't supported. Use JPG, PNG, PDF, MP4 or Office files.");
-  if (opts.imagesOnly && !MIME[ext]!.startsWith("image/")) throw new UserError("Please upload a photo (JPG or PNG).");
-  await fs.mkdir(UPLOAD_DIR, { recursive: true });
-  const stored = `${crypto.randomUUID()}${ext}`;
-  await fs.writeFile(path.join(UPLOAD_DIR, stored), Buffer.from(await file.arrayBuffer()));
-  return { url: `/files/${stored}`, name: file.name };
+  const mime = MIME[ext];
+  if (!mime) throw new UserError("That file type isn't supported. Use JPG, PNG, PDF, MP4 or Office files.");
+  if (opts.imagesOnly && !mime.startsWith("image/")) throw new UserError("Please upload a photo (JPG or PNG).");
+  const id = `${crypto.randomUUID()}${ext}`;
+  const db = await getDb();
+  await db.insert(storedFiles).values({
+    id,
+    name: file.name,
+    mime,
+    size: file.size,
+    data: Buffer.from(await file.arrayBuffer()),
+    uploadedBy: opts.userId ?? null,
+  });
+  return { url: `/files/${id}`, name: file.name };
 }

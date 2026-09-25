@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { and, desc, eq, ilike, inArray, or, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, like, inArray, or, sql, type SQL } from "drizzle-orm";
 import { FileText } from "lucide-react";
 import { getDb } from "@/db";
 import { clients, quoteLines, quoteVersions, quotes, users } from "@/db/schema";
@@ -32,14 +32,14 @@ export default async function QuotesPage({ searchParams }: { searchParams: Promi
   const where: SQL[] = [];
   if (tab.statuses) where.push(inArray(quotes.status, tab.statuses as unknown as Status[]));
   if (mine) where.push(eq(quotes.createdBy, user.id));
-  if (sp.q) where.push(or(ilike(quotes.title, `%${sp.q}%`), ilike(quotes.number, `%${sp.q}%`), ilike(clients.name, `%${sp.q}%`))!);
+  if (sp.q) where.push(or(like(quotes.title, `%${sp.q}%`), like(quotes.number, `%${sp.q}%`), like(clients.name, `%${sp.q}%`))!);
 
   const dates = db
     .select({
       versionId: quoteLines.versionId,
       start: sql<string>`min(${quoteLines.startDate})`.as("qs"),
       end: sql<string>`max(${quoteLines.endDate})`.as("qe"),
-      screens: sql<number>`count(${quoteLines.assetId})::int`.as("qn"),
+      screens: sql<number>`count(${quoteLines.assetId})`.as("qn"),
     })
     .from(quoteLines)
     .groupBy(quoteLines.versionId)
@@ -56,7 +56,7 @@ export default async function QuotesPage({ searchParams }: { searchParams: Promi
     .orderBy(desc(quotes.updatedAt));
 
   const counts = await db
-    .select({ status: quotes.status, n: sql<number>`count(*)::int` })
+    .select({ status: quotes.status, n: sql<number>`count(*)` })
     .from(quotes)
     .where(mine ? eq(quotes.createdBy, user.id) : undefined)
     .groupBy(quotes.status);

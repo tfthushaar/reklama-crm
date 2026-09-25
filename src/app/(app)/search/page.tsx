@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { desc, eq, ilike, or } from "drizzle-orm";
+import { desc, eq, like, or } from "drizzle-orm";
 import { Search } from "lucide-react";
 import { getDb } from "@/db";
 import { assets, bookings, clients, contacts, invoices, quotes } from "@/db/schema";
@@ -23,35 +23,35 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       </div>
     );
   }
-  const like = `%${q}%`;
+  const pattern = `%${q}%`;
   const db = await getDb();
   const [cl, ct, sc, qt, bk, iv] = await Promise.all([
-    db.select().from(clients).where(or(ilike(clients.name, like), ilike(clients.gstin, like), ilike(clients.phone, like), ilike(clients.email, like))).limit(10),
+    db.select().from(clients).where(or(like(clients.name, pattern), like(clients.gstin, pattern), like(clients.phone, pattern), like(clients.email, pattern))).limit(10),
     db
       .select({ p: contacts, c: clients })
       .from(contacts)
       .innerJoin(clients, eq(clients.id, contacts.clientId))
-      .where(or(ilike(contacts.name, like), ilike(contacts.phone, like), ilike(contacts.email, like)))
+      .where(or(like(contacts.name, pattern), like(contacts.phone, pattern), like(contacts.email, pattern)))
       .limit(10),
-    db.select().from(assets).where(or(ilike(assets.name, like), ilike(assets.code, like), ilike(assets.area, like))).limit(10),
+    db.select().from(assets).where(or(like(assets.name, pattern), like(assets.code, pattern), like(assets.area, pattern))).limit(10),
     db
       .select({ q: quotes, c: clients.name })
       .from(quotes)
       .innerJoin(clients, eq(clients.id, quotes.clientId))
-      .where(or(ilike(quotes.number, like), ilike(quotes.title, like), ilike(clients.name, like)))
+      .where(or(like(quotes.number, pattern), like(quotes.title, pattern), like(clients.name, pattern)))
       .orderBy(desc(quotes.createdAt))
       .limit(10),
     db
       .select({ b: bookings, c: clients.name })
       .from(bookings)
       .innerJoin(clients, eq(clients.id, bookings.clientId))
-      .where(or(ilike(bookings.number, like), ilike(bookings.title, like), ilike(bookings.roNumber, like), ilike(clients.name, like)))
+      .where(or(like(bookings.number, pattern), like(bookings.title, pattern), like(bookings.roNumber, pattern), like(clients.name, pattern)))
       .limit(10),
     db
       .select({ i: invoices, c: clients.name })
       .from(invoices)
       .innerJoin(clients, eq(clients.id, invoices.clientId))
-      .where(or(ilike(invoices.number, like), ilike(clients.name, like)))
+      .where(or(like(invoices.number, pattern), like(clients.name, pattern)))
       .limit(10),
   ]);
   const total = cl.length + ct.length + sc.length + qt.length + bk.length + iv.length;

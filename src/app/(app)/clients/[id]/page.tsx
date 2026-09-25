@@ -83,7 +83,7 @@ export default async function ClientPage({
     outstandingSummary(db, id),
     db.select({ id: users.id, name: users.name }).from(users).where(inArray(users.role, ["sales_exec", "sales_manager", "owner"])),
     db
-      .select({ n: sql<number>`count(*)::int` })
+      .select({ n: sql<number>`count(*)` })
       .from(activities)
       .where(and(eq(activities.clientId, id), inArray(activities.type, ["call", "whatsapp", "email", "meeting"]))),
   ]);

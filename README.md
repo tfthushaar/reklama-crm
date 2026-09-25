@@ -15,8 +15,27 @@ npm run dev
 
 Open http://localhost:3000.
 
-- **No database setup needed.** An embedded Postgres (PGlite) is created in `.data/` on first start and filled with realistic demo data.
+- **No database setup needed.** A local SQLite file (`.data/local.db`) is created on first start and filled with realistic demo data.
 - All sample dates are relative to today, so the demo always looks current.
+
+## Prototype hosting: Vercel + Turso
+
+> **This setup is for the prototype only.** Vercel's free tier and a Turso (serverless SQLite) database are enough to demo the CRM to Reklama. For production we will scale up the hosting, database, file storage and monitoring. See [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) §3.
+
+- **App:** Vercel project `reklama-crm`, linked to this GitHub repo. Every push to `main` deploys automatically.
+- **Database:** Turso, provisioned through Vercel's Turso integration. It adds `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` to the project.
+- **First-time setup, or reloading demo data** from your machine:
+
+  ```bash
+  vercel env pull .env.local                # fetch the Turso credentials
+  npm run db:setup:remote                   # create tables + load demo data
+  npm run db:setup:remote -- --reset        # wipe and reload demo data
+  ```
+
+  The app also creates the tables and demo data by itself on first request if the database is empty.
+- **Prototype limits:**
+  - Uploads are stored in the database and capped at 4 MB each.
+  - The first request after a quiet period is slower, because the server "cold-starts".
 
 **Demo logins.** Click a name on the sign-in page, or use the email with the password `demo123`.
 
@@ -89,13 +108,13 @@ Open http://localhost:3000.
 ## Tech
 
 - **App:** Next.js 16 (App Router, server actions) + TypeScript + Tailwind CSS 4.
-- **Database:** Drizzle ORM on PostgreSQL. It uses PGlite locally, or any Postgres when `DATABASE_URL` is set (see `.env.example`). Migrations in `drizzle/` run automatically on start.
+- **Database:** Drizzle ORM on SQLite / libSQL. It uses a local file in development and Turso when `TURSO_DATABASE_URL` is set (see `.env.example`). Migrations in `drizzle/` run automatically on start.
 - **Where the logic lives:**
   - Business rules: `src/lib/services/`, covering quotes, bookings, invoices and housekeeping (automatic reminders and expiries).
   - Pricing and GST maths: `src/lib/pricing.ts`, shared by the browser and the server.
   - Availability: `src/lib/availability.ts`.
-- **Uploaded files:** stored in `.data/uploads` (swap for object storage in production).
+- **Uploaded files:** stored in the database (the `stored_files` table), so the app runs without a server disk. Move them to object storage for production.
 
 **Schema changes:** edit `src/db/schema.ts`, then run `npm run db:generate`.
 
-**Production:** set `SESSION_SECRET` and `DATABASE_URL`. The embedded database is meant for demos and development.
+**Deploying anywhere:** set `SESSION_SECRET`, `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`. The local SQLite file is only for development.

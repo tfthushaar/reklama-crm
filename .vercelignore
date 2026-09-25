@@ -1,0 +1,7 @@
+.data
+node_modules
+.next
+*.pdf
+.env
+.env.*
+!.env.example

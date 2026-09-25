@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { and, asc, desc, eq, ilike, inArray, ne, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, like, inArray, ne, or, sql, type SQL } from "drizzle-orm";
 import { CalendarCheck } from "lucide-react";
 import { getDb } from "@/db";
 import { assets, bookingLines, bookings, clients, invoices } from "@/db/schema";
@@ -29,14 +29,14 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
 
   const where: SQL[] = [];
   if (tab.statuses) where.push(inArray(bookings.status, tab.statuses as unknown as BStatus[]));
-  if (sp.q) where.push(or(ilike(bookings.title, `%${sp.q}%`), ilike(bookings.number, `%${sp.q}%`), ilike(clients.name, `%${sp.q}%`))!);
+  if (sp.q) where.push(or(like(bookings.title, `%${sp.q}%`), like(bookings.number, `%${sp.q}%`), like(clients.name, `%${sp.q}%`))!);
 
   const p = paidSq(db);
   const billing = db
     .select({
       bookingId: invoices.bookingId,
-      billed: sql<number>`sum(${invoices.total})::bigint`.as("billed"),
-      paid: sql<number>`coalesce(sum(${p.paid}),0)::bigint`.as("paidsum"),
+      billed: sql<number>`sum(${invoices.total})`.as("billed"),
+      paid: sql<number>`coalesce(sum(${p.paid}),0)`.as("paidsum"),
     })
     .from(invoices)
     .leftJoin(p, eq(p.invoiceId, invoices.id))
@@ -59,7 +59,7 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
         .innerJoin(assets, eq(assets.id, bookingLines.assetId))
         .where(inArray(bookingLines.bookingId, rows.map((r) => r.b.id)))
     : [];
-  const counts = await db.select({ status: bookings.status, n: sql<number>`count(*)::int` }).from(bookings).groupBy(bookings.status);
+  const counts = await db.select({ status: bookings.status, n: sql<number>`count(*)` }).from(bookings).groupBy(bookings.status);
   const countFor = (st: readonly string[] | null) => counts.filter((c) => !st || st.includes(c.status)).reduce((s, c) => s + c.n, 0);
 
   return (

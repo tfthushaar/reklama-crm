@@ -20,6 +20,7 @@ This plan keeps every requirement in the spec. It adds features for how outdoor 
 | 2026-09-25 | **LED screens are sold both as slots and exclusively.** Reklama hasn't settled on one model. | Each LED screen has a slot capacity. An exclusive booking takes every slot; a slot booking takes N slots. A hoarding has a capacity of 1. |
 | 2026-09-25 | **Map-based planning is deferred.** | Map view, radius search and Street View links are out of the prototype. Inventory is filtered by city, area and type instead. |
 | 2026-09-25 | **Build a working prototype** of everything else for the Reklama demo, with a **very simple, intuitive UI**. | Build order follows §9, favouring guided flows and few visible fields. |
+| 2026-09-25 | **Prototype hosting: Vercel + Turso (SQLite).** This is for the prototype only; production will be scaled up. | The data layer uses Drizzle on SQLite/libSQL. §6 describes the production target; the scale-up plan is in `PRODUCTION_READINESS.md` §3. |
 
 ---
 

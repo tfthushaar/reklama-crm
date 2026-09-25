@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { and, asc, eq, ilike, ne, or, sql } from "drizzle-orm";
+import { and, asc, eq, like, ne, or, sql } from "drizzle-orm";
 import { CalendarSearch, MonitorPlay, Upload } from "lucide-react";
 import { getDb } from "@/db";
 import { assetPhotos, assets, maintenanceTickets } from "@/db/schema";
@@ -27,7 +27,7 @@ export default async function ScreensPage({
   const to = checking ? sp.to! : t;
 
   const where = [];
-  if (sp.q) where.push(or(ilike(assets.name, `%${sp.q}%`), ilike(assets.code, `%${sp.q}%`), ilike(assets.area, `%${sp.q}%`))!);
+  if (sp.q) where.push(or(like(assets.name, `%${sp.q}%`), like(assets.code, `%${sp.q}%`), like(assets.area, `%${sp.q}%`))!);
   if (sp.type === "led" || sp.type === "hoarding") where.push(eq(assets.type, sp.type));
   if (sp.status && sp.status in ASSET_STATUS) where.push(eq(assets.status, sp.status as "active"));
   else where.push(ne(assets.status, "inactive"));
@@ -43,7 +43,7 @@ export default async function ScreensPage({
   const avail = await loadAvailability(db, rows.map((r) => r.id), from, to);
   const areas = (await db.selectDistinct({ area: assets.area }).from(assets).orderBy(asc(assets.area))).map((a) => a.area).filter(Boolean) as string[];
   const [{ maint }] = await db
-    .select({ maint: sql<number>`count(*)::int` })
+    .select({ maint: sql<number>`count(*)` })
     .from(maintenanceTickets)
     .where(ne(maintenanceTickets.status, "resolved"));
 

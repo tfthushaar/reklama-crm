@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { and, eq, ilike, inArray, isNull, min, or, sql } from "drizzle-orm";
+import { and, eq, like, inArray, isNull, min, or, sql } from "drizzle-orm";
 import { Upload } from "lucide-react";
 import { getDb } from "@/db";
 import { clients, tasks, users } from "@/db/schema";
@@ -33,7 +33,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   if (owner === "me") where.push(eq(clients.ownerId, user.id));
   else if (owner === "none") where.push(isNull(clients.ownerId));
   else if (/^\d+$/.test(owner)) where.push(eq(clients.ownerId, Number(owner)));
-  if (q) where.push(or(ilike(clients.name, `%${q}%`), ilike(clients.requirement, `%${q}%`))!);
+  if (q) where.push(or(like(clients.name, `%${q}%`), like(clients.requirement, `%${q}%`))!);
 
   const nextTask = db
     .select({ clientId: tasks.clientId, due: min(tasks.dueAt).as("due") })

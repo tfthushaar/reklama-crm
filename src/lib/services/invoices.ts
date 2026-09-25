@@ -119,7 +119,7 @@ export async function issueInvoice(db: Executor, userId: number, invoiceId: numb
 
 export async function amountPaid(db: Executor, invoiceId: number) {
   const [r] = await db
-    .select({ paid: sql<number>`coalesce(sum(${payments.amount} + ${payments.tds}), 0)::bigint` })
+    .select({ paid: sql<number>`coalesce(sum(${payments.amount} + ${payments.tds}), 0)` })
     .from(payments)
     .where(eq(payments.invoiceId, invoiceId));
   return Number(r?.paid ?? 0);

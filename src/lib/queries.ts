@@ -8,8 +8,8 @@ export function paidSq(db: Executor) {
   return db
     .select({
       invoiceId: payments.invoiceId,
-      paid: sql<number>`sum(${payments.amount} + ${payments.tds})::bigint`.as("paid"),
-      tds: sql<number>`sum(${payments.tds})::bigint`.as("tds_paid"),
+      paid: sql<number>`sum(${payments.amount} + ${payments.tds})`.as("paid"),
+      tds: sql<number>`sum(${payments.tds})`.as("tds_paid"),
     })
     .from(payments)
     .groupBy(payments.invoiceId)
@@ -23,9 +23,9 @@ export async function outstandingSummary(db: Executor, clientId?: number) {
   if (clientId) where.push(eq(invoices.clientId, clientId));
   const [r] = await db
     .select({
-      outstanding: sql<number>`coalesce(sum(${invoices.total} - coalesce(${p.paid}, 0)), 0)::bigint`,
-      overdue: sql<number>`coalesce(sum(case when ${invoices.dueDate} < ${t} then ${invoices.total} - coalesce(${p.paid}, 0) else 0 end), 0)::bigint`,
-      overdueCount: sql<number>`count(*) filter (where ${invoices.dueDate} < ${t})::int`,
+      outstanding: sql<number>`coalesce(sum(${invoices.total} - coalesce(${p.paid}, 0)), 0)`,
+      overdue: sql<number>`coalesce(sum(case when ${invoices.dueDate} < ${t} then ${invoices.total} - coalesce(${p.paid}, 0) else 0 end), 0)`,
+      overdueCount: sql<number>`count(*) filter (where ${invoices.dueDate} < ${t})`,
     })
     .from(invoices)
     .leftJoin(p, eq(p.invoiceId, invoices.id))
@@ -35,7 +35,7 @@ export async function outstandingSummary(db: Executor, clientId?: number) {
 
 export async function collectedBetween(db: Executor, from: string, to: string) {
   const [r] = await db
-    .select({ n: sql<number>`coalesce(sum(${payments.amount}), 0)::bigint` })
+    .select({ n: sql<number>`coalesce(sum(${payments.amount}), 0)` })
     .from(payments)
     .where(and(gte(payments.date, from), lte(payments.date, to)));
   return Number(r?.n ?? 0);
@@ -43,9 +43,9 @@ export async function collectedBetween(db: Executor, from: string, to: string) {
 
 /** Share of active screens that have at least one booking running on the given day. */
 export async function occupancyOn(db: Executor, day = today()) {
-  const [{ total }] = await db.select({ total: sql<number>`count(*)::int` }).from(assets).where(ne(assets.status, "inactive"));
+  const [{ total }] = await db.select({ total: sql<number>`count(*)` }).from(assets).where(ne(assets.status, "inactive"));
   const [{ busy }] = await db
-    .select({ busy: sql<number>`count(distinct ${bookingLines.assetId})::int` })
+    .select({ busy: sql<number>`count(distinct ${bookingLines.assetId})` })
     .from(bookingLines)
     .innerJoin(bookings, eq(bookings.id, bookingLines.bookingId))
     .where(

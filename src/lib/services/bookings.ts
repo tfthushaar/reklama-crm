@@ -1,5 +1,4 @@
 import { and, asc, eq, gt, gte, inArray, lte, ne } from "drizzle-orm";
-import { sql } from "drizzle-orm";
 import type { Executor } from "@/db";
 import { assets, bookingLines, bookings, clients, holds, quotes, tasks } from "@/db/schema";
 import { audit, logActivity } from "../audit";
@@ -19,12 +18,6 @@ export type BookInput = {
   notes: string | null;
 };
 
-async function lockAssets(db: Executor, ids: number[]) {
-  for (const id of [...new Set(ids)].sort((a, b) => a - b)) {
-    await db.execute(sql`SELECT pg_advisory_xact_lock(${1000000 + id})`);
-  }
-}
-
 function describeOccupant(o: { clientName: string; number: string; startDate: string; endDate: string }) {
   return `${o.clientName} (${o.number}, ${fmtRange(o.startDate, o.endDate)})`;
 }
@@ -41,7 +34,6 @@ export async function bookQuote(db: Executor, userId: number, quoteId: number, i
 
   const assetRows = await db.select().from(assets).where(inArray(assets.id, media.map((l) => l.assetId!)));
   const assetById = new Map(assetRows.map((a) => [a.id, a]));
-  await lockAssets(db, media.map((l) => l.assetId!));
 
   const number = await nextNumber(db, "booking");
   const startDate = media.reduce((m, l) => (l.startDate! < m ? l.startDate! : m), media[0]!.startDate!);
@@ -225,7 +217,6 @@ export async function extendBooking(db: Executor, userId: number, bookingId: num
     .select()
     .from(bookingLines)
     .where(and(eq(bookingLines.bookingId, bookingId), eq(bookingLines.kind, "media"), eq(bookingLines.endDate, b.endDate)));
-  await lockAssets(db, lines.map((l) => l.assetId!));
   const assetRows = await db.select().from(assets).where(inArray(assets.id, lines.map((l) => l.assetId!)));
   const byId = new Map(assetRows.map((a) => [a.id, a]));
   const extraStart = addDays(b.endDate, 1);

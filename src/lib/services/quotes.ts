@@ -179,6 +179,7 @@ export async function updateQuote(db: Executor, userId: number, quoteId: number,
     versionNo = q.currentVersion + 1;
     await releaseHolds(db, quoteId);
   } else if (current) {
+    await db.delete(quoteLines).where(eq(quoteLines.versionId, current.id));
     await db.delete(quoteVersions).where(eq(quoteVersions.id, current.id));
   }
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { and, desc, eq, ilike, inArray, isNull, lt, or, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, like, inArray, isNull, lt, or, sql, type SQL } from "drizzle-orm";
 import { Download, Receipt } from "lucide-react";
 import { getDb } from "@/db";
 import { bookings, clients, invoices } from "@/db/schema";
@@ -35,7 +35,7 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Pro
   if (tab === "paid") where.push(eq(invoices.status, "paid"));
   if (tab === "proforma") where.push(eq(invoices.kind, "proforma"));
   if (tab === "draft") where.push(eq(invoices.status, "draft"));
-  if (sp.q) where.push(or(ilike(invoices.number, `%${sp.q}%`), ilike(clients.name, `%${sp.q}%`))!);
+  if (sp.q) where.push(or(like(invoices.number, `%${sp.q}%`), like(clients.name, `%${sp.q}%`))!);
 
   const rows = await db
     .select({ i: invoices, client: clients.name, booking: bookings.title, paid: p.paid, tds: p.tds })
@@ -49,8 +49,8 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Pro
   const [out, collected] = await Promise.all([outstandingSummary(db), collectedBetween(db, monthStart(t), t)]);
   const aging = await db
     .select({
-      bucket: sql<string>`case when ${invoices.dueDate} >= ${t} then 'Not due' when ${t}::date - ${invoices.dueDate} <= 30 then '1–30 days' when ${t}::date - ${invoices.dueDate} <= 60 then '31–60 days' when ${t}::date - ${invoices.dueDate} <= 90 then '61–90 days' else '90+ days' end`,
-      amount: sql<number>`sum(${invoices.total} - coalesce(${p.paid},0))::bigint`,
+      bucket: sql<string>`case when ${invoices.dueDate} >= ${t} then 'Not due' when julianday(${t}) - julianday(${invoices.dueDate}) <= 30 then '1–30 days' when julianday(${t}) - julianday(${invoices.dueDate}) <= 60 then '31–60 days' when julianday(${t}) - julianday(${invoices.dueDate}) <= 90 then '61–90 days' else '90+ days' end`,
+      amount: sql<number>`sum(${invoices.total} - coalesce(${p.paid},0))`,
     })
     .from(invoices)
     .leftJoin(p, eq(p.invoiceId, invoices.id))
@@ -58,7 +58,7 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Pro
     .groupBy(sql`1`);
   const buckets = ["Not due", "1–30 days", "31–60 days", "61–90 days", "90+ days"].map((b) => ({ b, amount: Number(aging.find((a) => a.bucket === b)?.amount ?? 0) }));
   const maxBucket = Math.max(1, ...buckets.map((b) => b.amount));
-  const [{ drafts }] = await db.select({ drafts: sql<number>`count(*)::int` }).from(invoices).where(and(eq(invoices.status, "draft"), isNull(invoices.number)));
+  const [{ drafts }] = await db.select({ drafts: sql<number>`count(*)` }).from(invoices).where(and(eq(invoices.status, "draft"), isNull(invoices.number)));
 
   return (
     <div>

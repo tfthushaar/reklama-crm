@@ -13,7 +13,7 @@ export default async function NewScreenPage() {
   await requirePerm("inventory");
   const db = await getDb();
   const owners = await db.select({ id: siteOwners.id, name: siteOwners.name }).from(siteOwners);
-  const [{ n }] = await db.select({ n: sql<number>`count(*)::int` }).from(assets);
+  const [{ n }] = await db.select({ n: sql<number>`count(*)` }).from(assets);
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader title="Add a screen" subtitle="Add an LED screen or hoarding to your inventory." back={{ href: "/screens", label: "Screens" }} />

@@ -12,10 +12,48 @@ const R = (rupees: number) => rupees * 100;
 const daysAgo = (n: number, time = "11:00") => istDateTime(addDays(today(), -n), time);
 const daysAhead = (n: number, time = "11:00") => istDateTime(addDays(today(), n), time);
 
+const SEED_MARKER = "__seeded";
+
+/** Seeding runs statement by statement (remote databases time out long transactions); a marker row is written last. */
 export async function seedDemoData(db: DB) {
-  await db.transaction(async (tx) => {
-    await seed(tx);
-  });
+  await seed(db);
+  await db.insert(s.numberSeries).values({ key: SEED_MARKER, next: 1 }).onConflictDoNothing();
+}
+
+export async function isSeeded(db: Executor) {
+  const [row] = await db.select().from(s.numberSeries).where(eq(s.numberSeries.key, SEED_MARKER));
+  return !!row;
+}
+
+/** Deletes every row, children first, and restarts id counters. */
+export async function wipeAll(db: Executor) {
+  const order = [
+    s.auditLog,
+    s.payments,
+    s.invoiceLines,
+    s.invoices,
+    s.bookingFiles,
+    s.bookingLines,
+    s.holds,
+    s.bookings,
+    s.quoteLines,
+    s.quoteVersions,
+    s.quotes,
+    s.maintenanceTickets,
+    s.assetPhotos,
+    s.assets,
+    s.siteOwners,
+    s.tasks,
+    s.activities,
+    s.contacts,
+    s.clients,
+    s.numberSeries,
+    s.companySettings,
+    s.storedFiles,
+    s.users,
+  ];
+  for (const table of order) await db.delete(table);
+  await db.run(sql`DELETE FROM sqlite_sequence`);
 }
 
 async function seed(db: Executor) {
@@ -473,11 +511,10 @@ async function seed(db: Executor) {
     task({ title: "Shared site photos with Rakesh", assignedTo: arjun.id, clientId: client("Aurum Jewellers").id, dueAt: daysAgo(22), status: "done", outcome: "Rakesh liked MG Road", completedAt: daysAgo(22) }),
   ]);
 
-  await db.execute(sql`
-    UPDATE clients c SET last_activity_at = x.last
-    FROM (SELECT client_id, max(occurred_at) AS last FROM activities
-          WHERE type IN ('call','whatsapp','email','meeting') GROUP BY client_id) x
-    WHERE x.client_id = c.id`);
+  await db.run(sql`
+    UPDATE clients SET last_activity_at = (
+      SELECT max(a.occurred_at) FROM activities a
+      WHERE a.client_id = clients.id AND a.type IN ('call','whatsapp','email','meeting'))`);
 
   // ---------- proof of display for the live campaign ----------
   await db.insert(s.bookingFiles).values([

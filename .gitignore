@@ -21,3 +21,5 @@ next-env.d.ts
 npm-debug.log*
 .playwright/
 test-results/
+
+.vercel

@@ -49,8 +49,8 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
 
   const counts = await db
     .select({
-      today: sql<number>`count(*) filter (where ${tasks.status} = 'open' and ${tasks.dueAt} <= ${endOfToday})::int`,
-      upcoming: sql<number>`count(*) filter (where ${tasks.status} = 'open' and ${tasks.dueAt} > ${endOfToday})::int`,
+      today: sql<number>`count(*) filter (where ${tasks.status} = 'open' and ${tasks.dueAt} <= ${endOfToday.getTime()})`,
+      upcoming: sql<number>`count(*) filter (where ${tasks.status} = 'open' and ${tasks.dueAt} > ${endOfToday.getTime()})`,
     })
     .from(tasks)
     .where(eq(tasks.assignedTo, user.id));
@@ -63,9 +63,9 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
     const stats = await db
       .select({
         userId: tasks.assignedTo,
-        open: sql<number>`count(*) filter (where ${tasks.status} = 'open')::int`,
-        overdue: sql<number>`count(*) filter (where ${tasks.status} = 'open' and ${tasks.dueAt} < ${now})::int`,
-        doneWeek: sql<number>`count(*) filter (where ${tasks.status} = 'done' and ${tasks.completedAt} >= ${istDateTime(addDays(t, -6), "00:00")})::int`,
+        open: sql<number>`count(*) filter (where ${tasks.status} = 'open')`,
+        overdue: sql<number>`count(*) filter (where ${tasks.status} = 'open' and ${tasks.dueAt} < ${now.getTime()})`,
+        doneWeek: sql<number>`count(*) filter (where ${tasks.status} = 'done' and ${tasks.completedAt} >= ${istDateTime(addDays(t, -6), "00:00").getTime()})`,
       })
       .from(tasks)
       .groupBy(tasks.assignedTo);

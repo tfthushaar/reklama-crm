@@ -65,7 +65,7 @@ export default async function HomePage() {
   if (isFinance || isManager) {
     const [collected, out, occ] = await Promise.all([collectedBetween(db, monthStart(t), t), outstandingSummary(db), occupancyOn(db)]);
     const [{ pipeline, openQuotes }] = await db
-      .select({ pipeline: sql<number>`coalesce(sum(${quoteVersions.total}),0)::bigint`, openQuotes: sql<number>`count(*)::int` })
+      .select({ pipeline: sql<number>`coalesce(sum(${quoteVersions.total}),0)`, openQuotes: sql<number>`count(*)` })
       .from(quotes)
       .innerJoin(quoteVersions, and(eq(quoteVersions.quoteId, quotes.id), eq(quoteVersions.version, quotes.currentVersion)))
       .where(eq(quotes.status, "sent"));
@@ -85,16 +85,16 @@ export default async function HomePage() {
     );
   } else if (isSales) {
     const [{ openLeads }] = await db
-      .select({ openLeads: sql<number>`count(*)::int` })
+      .select({ openLeads: sql<number>`count(*)` })
       .from(clients)
       .where(and(eq(clients.ownerId, user.id), inArray(clients.stage, OPEN_STAGES)));
     const [{ sent, sentValue }] = await db
-      .select({ sent: sql<number>`count(*)::int`, sentValue: sql<number>`coalesce(sum(${quoteVersions.total}),0)::bigint` })
+      .select({ sent: sql<number>`count(*)`, sentValue: sql<number>`coalesce(sum(${quoteVersions.total}),0)` })
       .from(quotes)
       .innerJoin(quoteVersions, and(eq(quoteVersions.quoteId, quotes.id), eq(quoteVersions.version, quotes.currentVersion)))
       .where(and(eq(quotes.createdBy, user.id), eq(quotes.status, "sent")));
     const [{ won }] = await db
-      .select({ won: sql<number>`coalesce(sum(${bookings.total}),0)::bigint` })
+      .select({ won: sql<number>`coalesce(sum(${bookings.total}),0)` })
       .from(bookings)
       .where(and(eq(bookings.createdBy, user.id), ne(bookings.status, "cancelled"), gte(bookings.createdAt, istDateTime(monthStart(t), "00:00"))));
     stats.push(
@@ -105,12 +105,12 @@ export default async function HomePage() {
     );
   } else {
     const occ = await occupancyOn(db);
-    const [{ live }] = await db.select({ live: sql<number>`count(*)::int` }).from(bookings).where(eq(bookings.status, "live"));
+    const [{ live }] = await db.select({ live: sql<number>`count(*)` }).from(bookings).where(eq(bookings.status, "live"));
     const [{ starting }] = await db
-      .select({ starting: sql<number>`count(*)::int` })
+      .select({ starting: sql<number>`count(*)` })
       .from(bookings)
       .where(and(inArray(bookings.status, ["confirmed", "creative_received", "creative_approved"]), lte(bookings.startDate, addDays(t, 7))));
-    const [{ maint }] = await db.select({ maint: sql<number>`count(*)::int` }).from(assets).where(eq(assets.status, "maintenance"));
+    const [{ maint }] = await db.select({ maint: sql<number>`count(*)` }).from(assets).where(eq(assets.status, "maintenance"));
     stats.push(
       <Stat key="l" label="Campaigns live" value={live} icon={<MonitorPlay />} href="/bookings?tab=live" tone="green" />,
       <Stat key="s" label="Starting within 7 days" value={starting} icon={<CalendarClock />} href="/bookings?tab=upcoming" tone={starting ? "amber" : undefined} />,
@@ -192,7 +192,7 @@ export default async function HomePage() {
   }
   if (isManager) {
     const [{ n }] = await db
-      .select({ n: sql<number>`count(*)::int` })
+      .select({ n: sql<number>`count(*)` })
       .from(clients)
       .where(and(isNull(clients.ownerId), inArray(clients.stage, OPEN_STAGES)));
     if (n)
@@ -274,7 +274,7 @@ export default async function HomePage() {
   if (isManager) {
     const since = istDateTime(addDays(t, -6), "00:00");
     const rows = await db
-      .select({ userId: activities.userId, type: activities.type, n: sql<number>`count(*)::int` })
+      .select({ userId: activities.userId, type: activities.type, n: sql<number>`count(*)` })
       .from(activities)
       .where(and(gte(activities.occurredAt, since), inArray(activities.type, ["call", "whatsapp", "email", "meeting"])))
       .groupBy(activities.userId, activities.type);
