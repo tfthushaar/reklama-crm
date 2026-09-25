@@ -22,6 +22,7 @@ Open http://localhost:3000.
 
 > **This setup is for the prototype only.** Vercel's free tier and a Turso (serverless SQLite) database are enough to demo the CRM to Reklama. For production we will scale up the hosting, database, file storage and monitoring. See [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) §3.
 
+- **Live demo:** https://reklama-crm-sandy.vercel.app (demo logins below).
 - **App:** Vercel project `reklama-crm`, linked to this GitHub repo. Every push to `main` deploys automatically.
 - **Database:** Turso, provisioned through Vercel's Turso integration. It adds `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` to the project.
 - **First-time setup, or reloading demo data** from your machine:
@@ -36,6 +37,8 @@ Open http://localhost:3000.
 - **Prototype limits:**
   - Uploads are stored in the database and capped at 4 MB each.
   - The first request after a quiet period is slower, because the server "cold-starts".
+  - App and database are hosted in the US (Washington), so pages take about half a second from India. Production will be hosted in India.
+  - "Reset demo data" takes 10–20 seconds online; wait for the spinner to finish.
 
 **Demo logins.** Click a name on the sign-in page, or use the email with the password `demo123`.
 
